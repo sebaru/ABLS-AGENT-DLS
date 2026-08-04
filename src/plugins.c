@@ -241,62 +241,61 @@
     return(TRUE);
   }
 /******************************************************************************************************************************/
-/* Dls_plugins_remap_all_alias: remap les alias d'un plugin donné                                                             */
+/* Dls_remap: remap les alias et pointeurs internes d'un plugin                                                               */
 /* Entrée: le plugin                                                                                                          */
 /* Sortie : les alias sont mappés                                                                                             */
 /******************************************************************************************************************************/
- static void Dls_plugins_remap_all_alias ( void )
-  { g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
-    GSList *liste = Agent_vars->Dls_plugins;
-    while (liste)
-     { struct DLS_PLUGIN *plugin = liste->data;
-       if (plugin->handle && plugin->remap_all_alias)
-        { plugin->remap_all_alias(plugin);
-          Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_DEBUG, "Remapping Alias for '%s' OK", plugin->tech_id );
-        }
-       else Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_ERR, "Remapping Alias for '%s' Failed", plugin->tech_id );
-
-       if (!strcasecmp ( plugin->tech_id, "SYS" ) )                         /* Mapping des bits internes pour le plugin "SYS" */
-       {  Agent_vars->sys_flipflop_5hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_5HZ" );
-          Agent_vars->sys_flipflop_2hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2HZ" );
-          Agent_vars->sys_flipflop_1sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_1SEC" );
-          Agent_vars->sys_flipflop_2sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2SEC" );
-          Agent_vars->sys_mqtt_connected = Dls_data_BI_lookup   ( "SYS", "MQTT_CONNECTED" );
-          Agent_vars->sys_top_5hz        = Dls_data_MONO_lookup ( "SYS", "TOP_5HZ" );
-          Agent_vars->sys_top_2hz        = Dls_data_MONO_lookup ( "SYS", "TOP_2HZ" );
-          Agent_vars->sys_top_1sec       = Dls_data_MONO_lookup ( "SYS", "TOP_1SEC" );
-          Agent_vars->sys_top_5sec       = Dls_data_MONO_lookup ( "SYS", "TOP_5SEC" );
-          Agent_vars->sys_top_10sec      = Dls_data_MONO_lookup ( "SYS", "TOP_10SEC" );
-          Agent_vars->sys_top_1min       = Dls_data_MONO_lookup ( "SYS", "TOP_1MIN" );
-          Agent_vars->sys_bit_per_sec    = Dls_data_AI_lookup   ( "SYS", "DLS_BIT_PER_SEC" );
-          Agent_vars->sys_tour_per_sec   = Dls_data_AI_lookup   ( "SYS", "DLS_TOUR_PER_SEC" );
-          Agent_vars->sys_dls_wait       = Dls_data_AI_lookup   ( "SYS", "DLS_WAIT" );
-          Agent_vars->sys_maxrss         = Dls_data_AI_lookup   ( "SYS", "MAXRSS" );
-          Agent_vars->sys_log_per_min    = Dls_data_AI_lookup   ( "SYS", "LOG_PER_MIN" );
-       }
-
-       plugin->dls_osyn_acquit             = Dls_data_DI_lookup   ( plugin->tech_id, "OSYN_ACQUIT" );
-       plugin->dls_comm                    = Dls_data_MONO_lookup ( plugin->tech_id, "COMM" );
-       plugin->dls_memsa_ok                = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_OK" );
-       plugin->dls_memsa_defaut            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT" );
-       plugin->dls_memsa_defaut_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT_FIXE" );
-       plugin->dls_memsa_alarme            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME" );
-       plugin->dls_memsa_alarme_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME_FIXE" );
-       plugin->dls_memssb_veille           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_VEILLE" );
-       plugin->dls_memssb_alerte           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE" );
-       plugin->dls_memssb_alerte_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE_FIXE" );
-       plugin->dls_memssp_ok               = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_OK" );
-       plugin->dls_memssp_derangement      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT" );
-       plugin->dls_memssp_derangement_fixe = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT_FIXE" );
-       plugin->dls_memssp_danger           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER" );
-       plugin->dls_memssp_danger_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER_FIXE" );
-       plugin->dls_msg_comm_ok             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_OK" );
-       plugin->dls_msg_comm_hs             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_HS" );
-
-       liste = g_slist_next(liste);
+ static void Dls_plugin_remap_alias ( struct DLS_PLUGIN *plugin )
+  { if (plugin->handle && plugin->remap_all_alias)
+     { plugin->remap_all_alias(plugin);
+       Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_DEBUG, "Remapping Alias for '%s' OK", plugin->tech_id );
      }
-  g_rw_lock_reader_unlock ( &Agent_vars->Dls_plugins_lock );
+    else Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_ERR, "Remapping Alias for '%s' Failed", plugin->tech_id );
+
+    if (!strcasecmp ( plugin->tech_id, "SYS" ) )                           /* Mapping des bits internes pour le plugin "SYS" */
+     { Agent_vars->sys_flipflop_5hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_5HZ" );
+       Agent_vars->sys_flipflop_2hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2HZ" );
+       Agent_vars->sys_flipflop_1sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_1SEC" );
+       Agent_vars->sys_flipflop_2sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2SEC" );
+       Agent_vars->sys_mqtt_connected = Dls_data_BI_lookup   ( "SYS", "MQTT_CONNECTED" );
+       Agent_vars->sys_top_5hz        = Dls_data_MONO_lookup ( "SYS", "TOP_5HZ" );
+       Agent_vars->sys_top_2hz        = Dls_data_MONO_lookup ( "SYS", "TOP_2HZ" );
+       Agent_vars->sys_top_1sec       = Dls_data_MONO_lookup ( "SYS", "TOP_1SEC" );
+       Agent_vars->sys_top_5sec       = Dls_data_MONO_lookup ( "SYS", "TOP_5SEC" );
+       Agent_vars->sys_top_10sec      = Dls_data_MONO_lookup ( "SYS", "TOP_10SEC" );
+       Agent_vars->sys_top_1min       = Dls_data_MONO_lookup ( "SYS", "TOP_1MIN" );
+       Agent_vars->sys_bit_per_sec    = Dls_data_AI_lookup   ( "SYS", "DLS_BIT_PER_SEC" );
+       Agent_vars->sys_tour_per_sec   = Dls_data_AI_lookup   ( "SYS", "DLS_TOUR_PER_SEC" );
+       Agent_vars->sys_dls_wait       = Dls_data_AI_lookup   ( "SYS", "DLS_WAIT" );
+       Agent_vars->sys_maxrss         = Dls_data_AI_lookup   ( "SYS", "MAXRSS" );
+       Agent_vars->sys_log_per_min    = Dls_data_AI_lookup   ( "SYS", "LOG_PER_MIN" );
+     }
+
+    plugin->dls_osyn_acquit             = Dls_data_DI_lookup   ( plugin->tech_id, "OSYN_ACQUIT" );
+    plugin->dls_comm                    = Dls_data_MONO_lookup ( plugin->tech_id, "COMM" );
+    plugin->dls_memsa_ok                = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_OK" );
+    plugin->dls_memsa_defaut            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT" );
+    plugin->dls_memsa_defaut_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT_FIXE" );
+    plugin->dls_memsa_alarme            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME" );
+    plugin->dls_memsa_alarme_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME_FIXE" );
+    plugin->dls_memssb_veille           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_VEILLE" );
+    plugin->dls_memssb_alerte           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE" );
+    plugin->dls_memssb_alerte_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE_FIXE" );
+    plugin->dls_memssp_ok               = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_OK" );
+    plugin->dls_memssp_derangement      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT" );
+    plugin->dls_memssp_derangement_fixe = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT_FIXE" );
+    plugin->dls_memssp_danger           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER" );
+    plugin->dls_memssp_danger_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER_FIXE" );
+    plugin->dls_msg_comm_ok             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_OK" );
+    plugin->dls_msg_comm_hs             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_HS" );
   }
+/******************************************************************************************************************************/
+/* Dls_plugins_remap_all_alias: remap les alias de tous les plugins                                                           */
+/* Entrée: rien                                                                                                               */
+/* Sortie : les alias sont mappés                                                                                             */
+/******************************************************************************************************************************/
+ static void Dls_plugins_remap_all_alias ( void )
+  { Dls_foreach_plugins ( Dls_plugin_remap_alias ); }
 /******************************************************************************************************************************/
 /* Dls_Importer_un_plugin: Ajoute ou Recharge un plugin dans la liste des plugins                                             */
 /* Entrée: le tech_id associé                                                                                                 */
