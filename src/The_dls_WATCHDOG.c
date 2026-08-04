@@ -54,7 +54,7 @@
 /******************************************************************************************************************************/
  struct DLS_WATCHDOG *Dls_data_WATCHDOG_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -73,13 +73,13 @@
 /* Dls_data_WATCHDOG_set: Positionne un watchdog en fonction de la valeur en parametre                                        */
 /* Sortie : TRUE sur le boolean est UP                                                                                        */
 /******************************************************************************************************************************/
- void Dls_data_WATCHDOG_set ( struct DLS_TO_PLUGIN *vars, struct DLS_WATCHDOG *bit, gint consigne )
+ void Dls_data_WATCHDOG_set ( struct DLS_PLUGIN *plugin, struct DLS_WATCHDOG *bit, gint consigne )
   { if (!bit) return;
-    bit->top = Partage->top + consigne;
+    bit->top = Agent->Top + consigne;
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_WATCHDOG '%s:%s'=%d",
-              (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, consigne );
-    Partage->audit_bit_interne_per_sec++;
+              (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, consigne );
+    Agent_vars->audit_bit_interne_per_sec++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_get: Remonte l'etat d'un watchdog                                                                        */
@@ -87,7 +87,7 @@
 /******************************************************************************************************************************/
  gboolean Dls_data_WATCHDOG_get ( struct DLS_WATCHDOG *bit )
   { if (!bit) return(FALSE);
-    return( (Partage->top < bit->top ? TRUE : FALSE) ); /* False = Compteur échu */
+    return( (Agent->Top < bit->top ? TRUE : FALSE) ); /* False = Compteur échu */
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_get_time: Renvoie le temps de decompte restant du watchdog                                               */
@@ -95,7 +95,7 @@
 /******************************************************************************************************************************/
  gint Dls_data_WATCHDOG_get_time ( struct DLS_WATCHDOG *bit )
   { if (!bit) return(0);
-    return( (Partage->top < bit->top ? (bit->top - Partage->top) : 0) );
+    return( (Agent->Top < bit->top ? (bit->top - Agent->Top) : 0) );
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_set_from_thread_watchdog: Positionne un Watchdog dans DLS depuis un Watchdog 'thread'                    */

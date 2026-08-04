@@ -57,7 +57,7 @@
 /******************************************************************************************************************************/
  struct DLS_CI *Dls_data_CI_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -82,12 +82,12 @@
     if (etat)
      { if ( bit->etat == FALSE )                                                                          /* Passage en actif */
         { bit->etat = TRUE;
-          Partage->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_per_sec++;
           bit->valeur++;
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_CI '%s:%s'=%d",
-                    (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
-          if (vars && vars->debug) Dls_CI_export_to_API ( bit );                                   /* Si debug, envoi à l'API */
+                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
+          if (plugin && plugin->debug) Dls_CI_export_to_API ( bit );                                   /* Si debug, envoi à l'API */
         }
      }
     else
@@ -100,8 +100,8 @@
 /******************************************************************************************************************************/
  void Dls_data_CI_set_pulse ( struct DLS_PLUGIN *plugin, struct DLS_CI *bit )
   { if (!bit) return;
-    Dls_data_CI_set ( vars, bit, TRUE );
-    Dls_data_CI_set ( vars, bit, FALSE );
+    Dls_data_CI_set ( plugin, bit, TRUE );
+    Dls_data_CI_set ( plugin, bit, FALSE );
   }
 /******************************************************************************************************************************/
 /* Dls_data_CI_reset: Reset un compteur d'impulsion                                                                           */
@@ -114,7 +114,7 @@
      { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                           /* Archivage si besoin */
       Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                 "ligne %04d: DLS_CI '%s:%s'=%d resetted",
-                (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
+                (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
        bit->valeur = 0;                                                                          /* Valeur réelle du compteur */
      }
   }
@@ -136,7 +136,7 @@
     if (element)
      { Json_add_int  ( element, "valeur", bit->valeur );
        Json_add_bool ( element, "etat",   bit->etat );
-       MQTT_Send_to_API   ( element, "DLS_REPORT/CI/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/CI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

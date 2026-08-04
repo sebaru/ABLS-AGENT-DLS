@@ -35,10 +35,7 @@
  void Dls_Save_Data_to_API ( struct DLS_PLUGIN *plugin )
   { if (!plugin)
      { Info( __func__, "dls", NULL, LOG_ERR, "Error when saving dls_data: plugin is NULL." ); return; }
-    if (Config.instance_is_master == FALSE)                                        /* Seul le master sauvegarde les compteurs */
-    { Info( __func__, "dls", plugin->tech_id, LOG_ERR, "Error when saving dls_data: instance is not Master." ); return; }
-
-    gint top = Partage->top;
+    gint top = Agent->Top;
 
     JsonNode *RootNode = Json_create();
     if (!RootNode)
@@ -80,7 +77,7 @@
     Dls_all_CH_to_json ( CHArray, plugin );
     Json_add_int ( RootNode, "nbr_mnemos_CH", json_array_get_length ( CHArray ) );
 
-    JsonNode *api_result = Http_Post_to_global_API ( "/run/mnemos/save", RootNode );
+    JsonNode *api_result = Http_Post_to_global_API ( Agent, "/run/mnemos/save", RootNode );
     if (api_result && Json_get_int ( api_result, "http_code" ) == 200)
      { Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                  "'%s': Save %d BI to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_BI" ) );
@@ -100,7 +97,7 @@
                  "'%s': Save %d CI to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CI" ) );
        Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                  "'%s': Save %d CH to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CH" ) );
-       Info( __func__, "dls", plugin->tech_id, LOG_NOTICE, "Saved '%s' DLS_DATA in %06.1fs", plugin->tech_id, (Partage->top-top)/10.0 );
+       Info( __func__, "dls", plugin->tech_id, LOG_NOTICE, "Saved '%s' DLS_DATA in %06.1fs", plugin->tech_id, (Agent->Top-top)/10.0 );
      }
     else
      { Info( __func__, "dls", plugin->tech_id, LOG_ERR, "Error when saving '%s' dls_data to API.", plugin->tech_id ); }

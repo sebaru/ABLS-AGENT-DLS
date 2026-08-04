@@ -57,7 +57,7 @@
 /******************************************************************************************************************************/
  struct DLS_CH *Dls_data_CH_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -91,21 +91,21 @@
     if (etat)
      { if ( ! bit->etat )                                                                            /* Démarrage du comptage */
         { bit->etat    = TRUE;
-          bit->old_top = Partage->top;
+          bit->old_top = Agent->Top;
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is now counting",
-                   (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
-          if (vars && vars->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
+                   (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
+          if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
         }
        else                                                                                                       /* Comptage */
         { int new_top, delta;
-          new_top = Partage->top;
+          new_top = Agent->Top;
           delta   = new_top - bit->old_top;
           if (delta >= 10)                                                              /* On compte +1 toutes les secondes ! */
            { bit->valeur += delta;
              bit->old_top = new_top;
-             if (vars && vars->debug) Dls_CH_export_to_API ( bit );                                /* Si debug, envoi a l'API */
-             Partage->audit_bit_interne_per_sec++;
+             if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                /* Si debug, envoi a l'API */
+             Agent_vars->audit_bit_interne_per_sec++;
            }
         }
      }
@@ -114,8 +114,8 @@
         { bit->etat = FALSE;
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is not counting anymore",
-                   (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
-          if (vars && vars->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
+                   (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
+          if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
         }
      }
   }
@@ -128,12 +128,12 @@
   { if (!bit) return;
     if (bit->valeur > 0)
      { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                           /* Archivage si besoin */
-      Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
+c      Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                 "ligne %04d: DLS_CH '%s:%s'=%d resetted",
-                (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
+                (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
        bit->valeur = 0;
        bit->etat   = FALSE;
-       if (vars && vars->debug) Dls_CH_export_to_API ( bit );                                      /* Si debug, envoi a l'API */
+       if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                      /* Si debug, envoi a l'API */
      }
   }
 /******************************************************************************************************************************/
@@ -146,7 +146,7 @@
     if (element)
      { Json_add_int  ( element, "valeur", bit->valeur );
        Json_add_bool ( element, "etat",   bit->etat );
-       MQTT_Send_to_API   ( element, "DLS_REPORT/CH/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/CH/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

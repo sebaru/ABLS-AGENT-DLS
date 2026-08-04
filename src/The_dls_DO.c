@@ -58,7 +58,7 @@
 /******************************************************************************************************************************/
  struct DLS_DO *Dls_data_DO_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -85,23 +85,24 @@
 /* Dls_data_DO_set: Positionne une bit de sortie TOR                                                                          */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_DO_set ( struct DLS_TO_PLUGIN *vars, struct DLS_DO *dout, gboolean etat )
+ void Dls_data_DO_set ( struct DLS_PLUGIN *plugin, struct DLS_DO *dout, gboolean etat )
   { if (!dout) return;
     if (dout->etat == etat) return;
+
     dout->etat = etat;
     Info( __func__, "dls", dout->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_DO '%s:%s'=%d ",
-              (vars ? vars->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
+              (plugin ? plugin->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
     Dls_DO_export_to_API ( dout );                                                                           /* envoi a l'API */
     MQTT_Send_archive_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                         /* Archivage si besoin */
-    dout->last_arch = Partage->top;
+    dout->last_arch = Agent->Top;
 
     JsonNode *RootNode = Json_create ();
     if (RootNode)
      { Dls_DO_to_json ( RootNode, dout );
-       g_rw_lock_writer_lock ( &Partage->Liste_DO_synchro );                      /* Envoie au MSRV pour dispatch aux threads */
-       Partage->Liste_DO = g_slist_append ( Partage->Liste_DO, RootNode );
-       g_rw_lock_writer_unlock ( &Partage->Liste_DO_synchro );
+       g_rw_lock_writer_lock ( &Agent_vars->Liste_DO_synchro );                      /* Envoie au MSRV pour dispatch aux threads */
+       Agent_vars->Liste_DO = g_slist_append ( Agent_vars->Liste_DO, RootNode );
+       g_rw_lock_writer_unlock ( &Agent_vars->Liste_DO_synchro );
      }
     else Info( __func__, "dls", dout->tech_id, LOG_ERR, "JSon RootNode creation failed" );
 
@@ -110,13 +111,13 @@
        if (RootNode)
         { Dls_DO_to_json ( RootNode, dout );
           Json_add_bool ( RootNode, "etat", FALSE );                                    /* Passage a zero dans la foulée */
-          g_rw_lock_writer_lock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
-          Partage->Liste_DO = g_slist_append ( Partage->Liste_DO, RootNode );
-          g_rw_lock_writer_unlock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
+          g_rw_lock_writer_lock ( &Agent_vars->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
+          Agent_vars->Liste_DO = g_slist_append ( Agent_vars->Liste_DO, RootNode );
+          g_rw_lock_writer_unlock ( &Agent_vars->Liste_DO_synchro );                  /* Envoie au MSRV pour dispatch aux threads */
         }
       else Info( __func__, "dls", dout->tech_id, LOG_ERR, "JSon RootNode creation failed" );
      }
-    Partage->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_per_sec++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_DO_get_up: Remonte le front montant d'un boolean                                                                  */
@@ -169,7 +170,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
-       MQTT_Send_to_API   ( element, "DLS_REPORT/DO/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/DO/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

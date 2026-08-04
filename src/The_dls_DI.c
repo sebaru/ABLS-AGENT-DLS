@@ -57,7 +57,7 @@
 /******************************************************************************************************************************/
  struct DLS_DI *Dls_data_DI_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -107,11 +107,11 @@
      { bit->etat = valeur;
       Info( __func__, "dls", bit->tech_id, LOG_NOTICE, "Changing DLS_DI '%s:%s'=%d up %d down %d",
                  bit->tech_id, bit->acronyme, valeur, bit->edge_up, bit->edge_down );
-       if (valeur) Partage->Set_Dls_DI_Edge_up   = g_slist_prepend ( Partage->Set_Dls_DI_Edge_up,   bit );
-              else Partage->Set_Dls_DI_Edge_down = g_slist_prepend ( Partage->Set_Dls_DI_Edge_down, bit );
-       Partage->audit_bit_interne_per_sec++;
+        if (valeur) Agent_vars->Set_Dls_DI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_up,   bit );
+          else Agent_vars->Set_Dls_DI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_down, bit );
+        Agent_vars->audit_bit_interne_per_sec++;
        MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
-       bit->last_arch = Partage->top;
+        bit->last_arch = Agent->Top;
        Dls_DI_export_to_API ( bit );                                                                         /* envoi a l'API */
      }
   }
@@ -121,7 +121,7 @@
 /******************************************************************************************************************************/
  void Dls_data_DI_set_pulse ( struct DLS_PLUGIN *plugin, struct DLS_DI *bit )
   { if (!bit) return;
-    Partage->Set_Dls_Data = g_slist_append ( Partage->Set_Dls_Data, bit );
+     Agent_vars->Set_Dls_Data = g_slist_append ( Agent_vars->Set_Dls_Data, bit );
     Info( __func__, "dls", bit->tech_id, LOG_NOTICE,
               "Mise a un du bit DI '%s:%s' demandée", bit->tech_id, bit->acronyme );
   }
@@ -194,7 +194,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
-       Agent_Send_mqtt_api_message ( Agent, element, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

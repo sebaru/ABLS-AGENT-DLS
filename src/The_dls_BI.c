@@ -54,7 +54,7 @@
 /******************************************************************************************************************************/
  struct DLS_BI *Dls_data_BI_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -73,20 +73,20 @@
 /* Dls_data_BI_set: Positionne un bistable                                                                                    */
 /* Sortie : TRUE sur le boolean est UP                                                                                        */
 /******************************************************************************************************************************/
- void Dls_data_BI_set ( struct DLS_TO_PLUGIN *vars, struct DLS_BI *bi, gboolean valeur )
+ void Dls_data_BI_set ( struct DLS_PLUGIN *plugin, struct DLS_BI *bi, gboolean valeur )
   { if (!bi) return;
 
     if (bi->etat != valeur)
     { Info( __func__, "dls", bi->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_BI '%s:%s'=%d up %d down %d",
-                 (vars ? vars->num_ligne : -1), bi->tech_id, bi->acronyme, valeur, bi->edge_up, bi->edge_down );
+                 (plugin ? plugin->num_ligne : -1), bi->tech_id, bi->acronyme, valeur, bi->edge_up, bi->edge_down );
        bi->etat = valeur;
        if (bi->etat == TRUE)
-        { Partage->Set_Dls_BI_Edge_up   = g_slist_prepend ( Partage->Set_Dls_BI_Edge_up, bi ); }
+        { Agent_vars->Set_Dls_BI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_up, bi ); }
        else
-        { Partage->Set_Dls_BI_Edge_down = g_slist_prepend ( Partage->Set_Dls_BI_Edge_down, bi ); }
-       if (vars && vars->debug) Dls_BI_export_to_API ( bi );                                       /* Si debug, envoi a l'API */
-       Partage->audit_bit_interne_per_sec++;
+        { Agent_vars->Set_Dls_BI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_down, bi ); }
+       if (plugin && plugin->debug) Dls_BI_export_to_API ( bi );                                       /* Si debug, envoi a l'API */
+       Agent_vars->audit_bit_interne_per_sec++;
      }
   }
 /******************************************************************************************************************************/
@@ -122,7 +122,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
-       MQTT_Send_to_API   ( element, "DLS_REPORT/BI/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/BI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

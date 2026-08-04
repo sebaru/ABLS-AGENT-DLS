@@ -54,7 +54,7 @@
 /******************************************************************************************************************************/
  struct DLS_HORLOGE *Dls_data_HORLOGE_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -76,7 +76,7 @@
  gboolean Dls_data_HORLOGE_get ( struct DLS_HORLOGE *bit )
   { if (!bit) return(FALSE);
     gboolean found = FALSE;
-    GSList *Horloges = Partage->HORLOGE_actives;
+    GSList *Horloges = Agent_vars->HORLOGE_actives;
     while (Horloges)
      { struct DLS_HORLOGE *horloge = Horloges->data;
        if ( !strcasecmp ( horloge->acronyme, bit->acronyme ) && !strcasecmp( horloge->tech_id, bit->tech_id ) ) found = TRUE;
@@ -89,9 +89,9 @@
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
  void Dls_data_HORLOGE_clear ()
-  { if (Partage->HORLOGE_actives)
-     { g_slist_free ( Partage->HORLOGE_actives );
-       Partage->HORLOGE_actives = NULL;
+  { if (Agent_vars->HORLOGE_actives)
+     { g_slist_free ( Agent_vars->HORLOGE_actives );
+       Agent_vars->HORLOGE_actives = NULL;
      }
   }
 /******************************************************************************************************************************/
@@ -110,7 +110,7 @@
      { gchar *tech_id  = Json_get_string ( element, "tech_id" );
        gchar *acronyme = Json_get_string ( element, "acronyme" );
        struct DLS_HORLOGE *bit = Dls_data_HORLOGE_lookup ( tech_id, acronyme );
-       if (bit) Partage->HORLOGE_actives = g_slist_append ( Partage->HORLOGE_actives, bit );
+      if (bit) Agent_vars->HORLOGE_actives = g_slist_append ( Agent_vars->HORLOGE_actives, bit );
       Info( __func__, "dls", tech_id, LOG_NOTICE, "Mise à un de l'horloge %s:%s", tech_id, acronyme );
      }
   }
@@ -120,21 +120,19 @@
 /* Sortie: Les horloges sont directement pilotées dans la structure DLS_DATA                                                  */
 /******************************************************************************************************************************/
  void Dls_data_activer_horloge ( void )
-  { Json_foreach_array_element ( Partage->HORLOGE_ticks, "horloges", Dls_data_activer_une_horloge, NULL ); }
+  { Json_foreach_array_element ( Agent_vars->HORLOGE_ticks, "horloges", Dls_data_activer_une_horloge, NULL ); }
 /******************************************************************************************************************************/
 /* Dls_Load_horloge_ticks: Charge les horloges depuis l'API                                                                   */
 /* Entrée: rien                                                                                                               */
 /* Sortie: Les horloges sont directement stockées dans la structure partagée                                                  */
 /******************************************************************************************************************************/
  void Dls_Load_horloge_ticks ( void )
-  { JsonNode *api_result = Http_Get_from_global_API ( "/run/horloges", NULL );
+  { JsonNode *api_result = Http_Get_from_global_API ( Agent, "/run/horloges", NULL );
     if (api_result && Json_get_int ( api_result, "http_code" ) == 200)
-     { pthread_mutex_lock ( &Partage->synchro );
-       Json_unref ( Partage->HORLOGE_ticks );
-       Partage->HORLOGE_ticks = api_result;
-       pthread_mutex_unlock ( &Partage->synchro );
+     { Json_unref ( Agent_vars->HORLOGE_ticks );
+       Agent_vars->HORLOGE_ticks = api_result;
        Info( __func__, "dls", NULL, LOG_INFO, "%03d HORLOGE ticks loaded.",
-                 Json_get_int ( Partage->HORLOGE_ticks, "nbr_horloges" ) );
+                 Json_get_int ( Agent_vars->HORLOGE_ticks, "nbr_horloges" ) );
      }
     else
      { Info( __func__, "dls", NULL, LOG_ERR, "API Request for HORLOGE TICKS failed." );

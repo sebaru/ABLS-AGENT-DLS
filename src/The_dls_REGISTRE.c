@@ -57,7 +57,7 @@
 /******************************************************************************************************************************/
  struct DLS_REGISTRE *Dls_data_REGISTRE_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -76,15 +76,15 @@
 /* Dls_data_REGISTRE_set: Positionne un registre                                                                              */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_REGISTRE_set ( struct DLS_TO_PLUGIN *vars, struct DLS_REGISTRE *registre, gdouble valeur )
+ void Dls_data_REGISTRE_set ( struct DLS_PLUGIN *plugin, struct DLS_REGISTRE *registre, gdouble valeur )
   { if (!registre) return;
     if (valeur != registre->valeur)
      { registre->valeur = valeur;
-       if (vars && vars->debug) Dls_REGISTRE_export_to_API ( registre );
+       if (plugin && plugin->debug) Dls_REGISTRE_export_to_API ( registre );
       Info( __func__, "dls", registre->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_REGISTRE '%s:%s'=%f",
-                 (vars ? vars->num_ligne : -1), registre->tech_id, registre->acronyme, registre->valeur );
-       Partage->audit_bit_interne_per_sec++;
+                 (plugin ? plugin->num_ligne : -1), registre->tech_id, registre->acronyme, registre->valeur );
+       Agent_vars->audit_bit_interne_per_sec++;
      }
   }
 /******************************************************************************************************************************/
@@ -122,7 +122,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_double ( element, "valeur", bit->valeur );
-       MQTT_Send_to_API     ( element, "DLS_REPORT/REGISTRE/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/REGISTRE/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref      ( element );
      }
   }

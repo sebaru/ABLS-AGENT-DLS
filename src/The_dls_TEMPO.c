@@ -54,7 +54,7 @@
 /******************************************************************************************************************************/
  struct DLS_TEMPO *Dls_data_TEMPO_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -87,91 +87,91 @@
           tempo->max_on    = 0;
           tempo->delai_off = 0;
         }
-       tempo->date_on = Partage->top + tempo->delai_on;
+      tempo->date_on = Agent->Top + tempo->delai_on;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d, WAIT_FOR_DELAI_ON",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+           (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_DELAI_ON && etat == 0)
      { tempo->status = DLS_TEMPO_NOT_COUNTING;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d, NOT_COUNTING",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                 (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
-    if (tempo->status == DLS_TEMPO_WAIT_FOR_DELAI_ON && tempo->date_on <= Partage->top)
+    if (tempo->status == DLS_TEMPO_WAIT_FOR_DELAI_ON && tempo->date_on <= Agent->Top)
      { tempo->status = DLS_TEMPO_WAIT_FOR_MIN_ON;
        tempo->state = TRUE;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_MIN_ON",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                 (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_MIN_ON && etat == 0 &&
-        Partage->top < tempo->date_on + tempo->min_on )
-     { if (Partage->top+tempo->delai_off <= tempo->date_on + tempo->min_on)
+          Agent->Top < tempo->date_on + tempo->min_on )
+        { if (Agent->Top+tempo->delai_off <= tempo->date_on + tempo->min_on)
             { tempo->date_off = tempo->date_on+tempo->min_on; }
-       else { tempo->date_off = Partage->top+tempo->delai_off; }
+         else { tempo->date_off = Agent->Top+tempo->delai_off; }
        tempo->status = DLS_TEMPO_WAIT_FOR_DELAI_OFF;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_DELAI_OFF",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_MIN_ON && etat == 0 &&
-        tempo->date_on + tempo->min_on <= Partage->top )
-     { tempo->date_off = Partage->top+tempo->delai_off;
+          tempo->date_on + tempo->min_on <= Agent->Top )
+        { tempo->date_off = Agent->Top+tempo->delai_off;
        tempo->status = DLS_TEMPO_WAIT_FOR_DELAI_OFF;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_DELAI_OFF",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_MIN_ON && etat == 1 &&
-        tempo->date_on + tempo->min_on <= Partage->top )
+        tempo->date_on + tempo->min_on <= Agent->Top )
      { tempo->status = DLS_TEMPO_WAIT_FOR_MAX_ON;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_DELAI_MAX_ON",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+           (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_MAX_ON && etat == 0 )
      { if (tempo->max_on)
-            { if (Partage->top+tempo->delai_off < tempo->date_on+tempo->max_on)
-                   { tempo->date_off = Partage->top + tempo->delai_off; }
+              { if (Agent->Top+tempo->delai_off < tempo->date_on+tempo->max_on)
+                  { tempo->date_off = Agent->Top + tempo->delai_off; }
               else { tempo->date_off = tempo->date_on+tempo->max_on; }
             }
-       else { tempo->date_off = Partage->top+tempo->delai_off; }
+            else { tempo->date_off = Agent->Top+tempo->delai_off; }
        tempo->status = DLS_TEMPO_WAIT_FOR_DELAI_OFF;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_DELAI_OFF",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_MAX_ON && etat == 1 && tempo->max_on &&
-        tempo->date_on + tempo->max_on <= Partage->top )
+        tempo->date_on + tempo->max_on <= Agent->Top )
      { tempo->date_off = tempo->date_on+tempo->max_on;
        tempo->status = DLS_TEMPO_WAIT_FOR_DELAI_OFF;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_DELAI_OFF",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                 (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
-    if (tempo->status == DLS_TEMPO_WAIT_FOR_DELAI_OFF && tempo->date_off <= Partage->top )
+    if (tempo->status == DLS_TEMPO_WAIT_FOR_DELAI_OFF && tempo->date_off <= Agent->Top )
      { tempo->date_on = tempo->date_off = 0;
        tempo->status = DLS_TEMPO_WAIT_FOR_COND_OFF;
        tempo->state = FALSE;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d WAIT_FOR_COND_OFF",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                 (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
 
     if (tempo->status == DLS_TEMPO_WAIT_FOR_COND_OFF && etat == 0 )
      { tempo->status = DLS_TEMPO_NOT_COUNTING;
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_TEMPO '%s:%s'=%d NOT_COUNTING",
-                 (vars ? vars->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
+                 (plugin ? plugin->num_ligne : -1), tempo->tech_id, tempo->acronyme, tempo->state );
      }
   }
 /******************************************************************************************************************************/
@@ -191,7 +191,7 @@
       Info( __func__, "dls", tempo->tech_id, LOG_DEBUG, "%s: Initializing TEMPO '%s:%s'",
                  __func__, tempo->tech_id, tempo->acronyme );
      }
-    ST_local ( vars, tempo, etat );                                                               /* Recopie dans la variable */
+    ST_local ( plugin, tempo, etat );                                                              /* Recopie dans la variable */
   }
 /******************************************************************************************************************************/
 /* Dls_data_TEMPO_get : Gestion du positionnement des tempos DLS en mode dynamique                                            */
@@ -207,7 +207,7 @@
 /******************************************************************************************************************************/
  gint Dls_data_TEMPO_get_time ( struct DLS_TEMPO *bit )
   { if (!bit) return(0);
-    gint restant = bit->date_on - Partage->top;
+    gint restant = bit->date_on - Agent->Top;
     return( (restant > 0 ? restant : 0) );
   }
 /******************************************************************************************************************************/

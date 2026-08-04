@@ -344,7 +344,7 @@ enum                                                                            
  extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) );
  extern void Dls_Acquitter_plugin ( gchar *tech_id );
  extern struct DLS_PLUGIN *Dls_get_plugin_by_tech_id ( gchar *tech_id );
- extern void Dls_run_archivage ( gpointer user_data, struct DLS_PLUGIN *plugin );
+ extern void Dls_run_archivage ( struct DLS_PLUGIN *plugin );
  extern void Dls_sync_all_output ( gpointer user_data, struct DLS_PLUGIN *plugin );
  extern void Dls_Save_Data_to_API ( struct DLS_PLUGIN *plugin );
 

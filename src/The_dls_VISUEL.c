@@ -55,7 +55,7 @@
 /******************************************************************************************************************************/
  struct DLS_VISUEL *Dls_data_VISUEL_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -90,9 +90,9 @@
       Info( __func__, "dls", visu->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_VISUEL '%s:%s'-> mode='%s' color='%s' valeur='%f' ('%s') "
                  "cligno=%d noshow=%d libelle='%s', disable=%d",
-                 (vars ? vars->num_ligne : -1), visu->tech_id, visu->acronyme,
+                 (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme,
                   visu->mode, visu->color, visu->valeur, visu->unite, visu->cligno, visu->noshow, visu->libelle, visu->disable );
-       Partage->audit_bit_interne_per_sec++;
+       Agent_vars->audit_bit_interne_per_sec++;
      }
   }
 /******************************************************************************************************************************/
@@ -106,7 +106,7 @@
        visu->changed = TRUE;
       Info( __func__, "dls", visu->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_VISUEL '%s:%s'-> badge='%s'",
-                 (vars ? vars->num_ligne : -1), visu->tech_id, visu->acronyme, badge );
+                 (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme, badge );
      }
   }
 /******************************************************************************************************************************/
@@ -120,7 +120,7 @@
        visu->changed = TRUE;
       Info( __func__, "dls", visu->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_VISUEL '%s:%s'-> mode='%s'",
-                 (vars ? vars->num_ligne : -1), visu->tech_id, visu->acronyme, mode );
+                 (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme, mode );
      }
   }
 /******************************************************************************************************************************/
@@ -134,7 +134,7 @@
        visu->changed = TRUE;
       Info( __func__, "dls", visu->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_VISUEL '%s:%s'-> color='%s'",
-                 (vars ? vars->num_ligne : -1), visu->tech_id, visu->acronyme, color );
+                 (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme, color );
      }
   }
 /******************************************************************************************************************************/
@@ -148,7 +148,7 @@
        visu->changed = TRUE;
       Info( __func__, "dls", visu->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_VISUEL '%s:%s'-> libelle='%s'",
-                 (vars ? vars->num_ligne : -1), visu->tech_id, visu->acronyme, libelle );
+                 (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme, libelle );
      }
   }
 /******************************************************************************************************************************/
@@ -163,7 +163,7 @@
     gboolean in_range = Dls_data_AI_get_inrange( src );
     gint valeur       = Dls_data_AI_get ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "%s", src->unite );
-    Dls_data_VISUEL_set ( vars, visu, 1.0*valeur, (in_range ? cligno : TRUE), noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, 1.0*valeur, (in_range ? cligno : TRUE), noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_CI : Met un jour un visuel accroché a un compteur d'impulsion                                      */
@@ -176,7 +176,7 @@
 
     gint valeur   = Dls_data_CI_get ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "%s", src->unite );
-    Dls_data_VISUEL_set ( vars, visu, 1.0*valeur, cligno, noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, 1.0*valeur, cligno, noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_CH : Met un jour un visuel accroché a un compteur d'impulsion                                      */
@@ -189,7 +189,7 @@
 
     gint valeur   = Dls_data_CH_get ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "s" );
-    Dls_data_VISUEL_set ( vars, visu, 1.0*valeur, cligno, noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, 1.0*valeur, cligno, noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_REGISTRE : Met un jour un visuel accroché a un registre                                            */
@@ -202,7 +202,7 @@
 
     gdouble valeur = Dls_data_REGISTRE_get ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "%s", src->unite );
-    Dls_data_VISUEL_set ( vars, visu, valeur, cligno, noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, valeur, cligno, noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_WATCHDOG : Met un jour un visuel accroché a un watchdog                                            */
@@ -215,7 +215,7 @@
 
     gdouble valeur = Dls_data_WATCHDOG_get_time ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "s" );
-    Dls_data_VISUEL_set ( vars, visu, valeur, cligno, noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, valeur, cligno, noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_TEMPO : Met un jour un visuel accroché a une temporisation                                         */
@@ -228,7 +228,7 @@
 
     gdouble valeur = Dls_data_TEMPO_get_time ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "s" );
-    Dls_data_VISUEL_set ( vars, visu, valeur, cligno, noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, valeur, cligno, noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_VISUEL_to_json : Formate un bit au format JSON                                                                         */
@@ -257,13 +257,13 @@
     GSList *liste = plugin->Dls_data_VISUEL;
     while ( liste )
      { struct DLS_VISUEL *visu = liste->data;
-       if (visu->changed && (Partage->top >= visu->next_send))
-        { g_rw_lock_writer_lock( &Partage->Liste_visuel_synchro );                      /* Ajout dans la liste de i a traiter */
-          Partage->Liste_visuel = g_slist_append( Partage->Liste_visuel, visu );
-          g_rw_lock_writer_unlock( &Partage->Liste_visuel_synchro );
+       if (visu->changed && (Agent->Top >= visu->next_send))
+        { g_rw_lock_writer_lock( &Agent_vars->Liste_visuel_synchro );                      /* Ajout dans la liste de i a traiter */
+          Agent_vars->Liste_visuel = g_slist_append( Agent_vars->Liste_visuel, visu );
+          g_rw_lock_writer_unlock( &Agent_vars->Liste_visuel_synchro );
           visu->changed = FALSE;
-          visu->next_send = Partage->top + 10;                                                  /* Next update dans 1 seconde */
-          Partage->audit_bit_interne_per_sec++;
+          visu->next_send = Agent->Top + 10;                                                  /* Next update dans 1 seconde */
+          Agent_vars->audit_bit_interne_per_sec++;
         }
        liste = g_slist_next(liste);
      }

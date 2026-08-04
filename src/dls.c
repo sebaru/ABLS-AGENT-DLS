@@ -108,7 +108,7 @@
        if (Agent->Top>=next_top_10sec)                                                              /* Toutes les 10 secondes */
         { next_top_10sec = Agent->Top + 100;
           Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
-          Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Mqtt_is_connected ( Agent->Mqtt_local_session ) );
+          Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Mqtt_is_connected ( Agent->mqtt_local ) );
         }
 /******************************************************************************************************************************/
        if (Agent->Top>=next_top_1min)                                                                   /* Toutes les minutes */
@@ -176,7 +176,7 @@
 
     Dls_Decharger_plugins();
 
-    g_rw_lock_clear ( &gent_vars->Dls_plugins_lock );
+    g_rw_lock_clear ( &Agent_vars->Dls_plugins_lock );
     g_rw_lock_clear ( &Agent_vars->Liste_DO_synchro );
     g_rw_lock_clear ( &Agent_vars->Liste_AO_synchro );
     g_rw_lock_clear ( &Agent_vars->Liste_visuel_synchro );

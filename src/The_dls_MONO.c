@@ -55,7 +55,7 @@
 /******************************************************************************************************************************/
  struct DLS_MONO *Dls_data_MONO_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -78,24 +78,24 @@
   { if(!mono) return;
     if (mono->etat == TRUE && valeur == FALSE)                                                            /* Front descendant */
      { mono->etat = FALSE;
-       Partage->Set_Dls_MONO_Edge_down = g_slist_prepend ( Partage->Set_Dls_MONO_Edge_down, mono );
+       Agent_vars->Set_Dls_MONO_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_MONO_Edge_down, mono );
      }
     else if (mono->etat == FALSE && valeur == TRUE)                                                          /* Front montant */
      { mono->etat = TRUE;
-       Partage->Set_Dls_MONO_Edge_up   = g_slist_prepend ( Partage->Set_Dls_MONO_Edge_up, mono );
+       Agent_vars->Set_Dls_MONO_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_MONO_Edge_up, mono );
      }
     else return; /* Pas de modification, on arrete la */
     Info( __func__, "dls", mono->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_MONO '%s:%s'=%d",
-              (vars ? vars->num_ligne : -1), mono->tech_id, mono->acronyme, mono->etat );
-    if ( (vars && vars->debug) ||
+              (plugin ? plugin->num_ligne : -1), mono->tech_id, mono->acronyme, mono->etat );
+    if ( (plugin && plugin->debug) ||
          g_str_has_prefix ( mono->acronyme, "MEMSA_DEFAUT" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSB_VEILLE" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSB_ALERTE" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSP_DERANGEMENT" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSP_DANGER" ) )
      { Dls_MONO_export_to_API ( mono ); }
-    Partage->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_per_sec++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_MONO_get: Remonte l'etat d'un monostable                                                                          */
@@ -150,7 +150,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool   ( element, "etat",     bit->etat );
-       MQTT_Send_to_API     ( element, "DLS_REPORT/MONO/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/MONO/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref      ( element );
      }
   }

@@ -246,8 +246,8 @@
 /* Sortie : les alias sont mappés                                                                                             */
 /******************************************************************************************************************************/
  static void Dls_plugins_remap_all_alias ( void )
-  { g_rw_lock_reader_lock ( &Agent_Agent_vars->Dls_plugins_lock );
-    GSList *liste = Agent_Agent_vars->Dls_plugins;
+  { g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
+    GSList *liste = Agent_vars->Dls_plugins;
     while (liste)
      { struct DLS_PLUGIN *plugin = liste->data;
        if (plugin->handle && plugin->remap_all_alias)
@@ -295,7 +295,7 @@
 
        liste = g_slist_next(liste);
      }
-  g_rw_lock_reader_unlock ( &Agent_Agent_vars->Dls_plugins_lock );
+  g_rw_lock_reader_unlock ( &Agent_vars->Dls_plugins_lock );
   }
 /******************************************************************************************************************************/
 /* Dls_Importer_un_plugin: Ajoute ou Recharge un plugin dans la liste des plugins                                             */
@@ -306,7 +306,7 @@
   { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Starting reload of plugin '%s'", tech_id );
     Dls_Decharger_un_plugin( tech_id );                                                 /* d'abord on le libère de la mémoire */
                                                                                  /* Récupère les metadata du plugin à charger */
-    JsonNode *api_result = Http_Get_from_global_API ( "/run/dls/load", "tech_id=%s", tech_id );
+    JsonNode *api_result = Http_Get_from_global_API ( Agent, "/run/dls/load", "tech_id=%s", tech_id );
     if (api_result == NULL || Json_get_int ( api_result, "http_code" ) != 200)
      { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "'%s': API Error.", tech_id );
        goto end;
@@ -360,9 +360,9 @@
      }
     g_list_free(Agent_tech_ids);
 
-    g_rw_lock_writer_lock( &Agent->Dls_plugin_lock );                    /* On stoppe DLS pour éviter la compilation multiple */
+    g_rw_lock_writer_lock( &Agent_vars->Dls_plugins_lock );                    /* On stoppe DLS pour éviter la compilation multiple */
     Agent_vars->Dls_plugins = g_slist_append( Agent_vars->Dls_plugins, plugin );                          /* Ajout à la liste */
-    g_rw_lock_writer_unlock( &Agent->Dls_plugin_lock );
+    g_rw_lock_writer_unlock( &Agent_vars->Dls_plugins_lock );
 
     Dls_plugins_remap_all_alias();                                             /* Remap de tous les alias de tous les plugins */
     if (plugin->init) plugin->init(plugin);                                            /* Appel de la fonction Init du plugin */
@@ -376,8 +376,8 @@
 /* Entrée: les parametres du tableau                                                                                          */
 /* Sortie: Néant                                                                                                              */
 /******************************************************************************************************************************/
- static void *Dls_Reload_un_plugin_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data )
-  { return(Dls_Reload_un_plugin ( Json_get_string ( element, "tech_id" ) )); }
+ static void Dls_Reload_un_plugin_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data )
+  { Dls_Reload_un_plugin ( Json_get_string ( element, "tech_id" ) ); }
 /******************************************************************************************************************************/
 /* Dls_Importer_plugins: Importe tous les plugins depuis l'API                                                                */
 /* Entrée: Rien                                                                                                               */
@@ -433,7 +433,6 @@
     if (plugin->Dls_data_VISUEL)   g_slist_free_full ( plugin->Dls_data_VISUEL, (GDestroyNotify) g_free );
     if (plugin->Arbre_Comm) g_slist_free(plugin->Arbre_Comm);
     Dls_data_MESSAGE_free_all ( plugin );
-    Dls_data_VISUEL_free_all ( plugin );
 
                                                                              /* Destruction de l'entete associé dans la GList */
     Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_INFO, "plugin '%s' unloaded (%s)", plugin->tech_id, plugin->name );

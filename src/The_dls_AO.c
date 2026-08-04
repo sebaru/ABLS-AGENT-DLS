@@ -140,7 +140,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_double ( element, "valeur", bit->valeur );
-       MQTT_Send_to_API ( element, "DLS_REPORT/AO/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/AO/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref ( element );
      }
   }

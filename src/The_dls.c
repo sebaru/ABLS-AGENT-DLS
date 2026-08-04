@@ -153,7 +153,7 @@
   { JsonNode *RootNode = Json_create ();
     if (RootNode)
      { Json_add_string ( RootNode, "commande", commande );
-       MQTT_Send_to_topic ( Agent->MQTT_local_session, RootNode, FALSE, "SET_BUS/%s", agent_tech_id );
+       Agent_send_mqtt_api_message ( Agent, RootNode, FALSE, "SET_BUS/%s", agent_tech_id );
        Json_unref(RootNode);
      }
   }

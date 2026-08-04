@@ -45,14 +45,14 @@
 /* Entrée : le plugin a traiter                                                                                               */
 /* Sortie : rien                                                                                                              */
 /******************************************************************************************************************************/
- void Dls_run_archivage ( gpointer user_data, struct DLS_PLUGIN *plugin )
+ void Dls_run_archivage ( struct DLS_PLUGIN *plugin )
   { if (!plugin) return;
     if (!plugin->enable) return;                                                        /* On archive pas les plugins disable */
 
     GSList *liste = plugin->Dls_data_AI;
     while ( liste )
      { struct DLS_AI *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
         { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, (bit->in_range ? bit->valeur : 0.0) );            /* Archivage si besoin */
           bit->last_arch = Partage->top;
