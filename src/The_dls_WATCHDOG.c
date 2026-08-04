@@ -1,5 +1,5 @@
 /******************************************************************************************************************************/
-/* Watchdogd/Dls/The_dls_WATCHDOG.c        Déclaration des fonctions pour la gestion des Watchdogs                            */
+/* ABLS-AGENT-DLS/src/The_dls_WATCHDOG.c        Déclaration des fonctions pour la gestion des temporisations                            */
 /* Projet Abls-Habitat version 4.7       Gestion d'habitat                                                25.03.2019 14:16:22 */
 /* Auteur: LEFEVRE Sebastien                                                                                                  */
 /******************************************************************************************************************************/
@@ -9,18 +9,18 @@
  *
  * Copyright (C) 1988-2026 - Sébastien LEFÈVRE
  *
- * Watchdog is free software; you can redistribute it and/or modify
+ * ABLS-AGENT-DLS is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * Watchdog is distributed in the hope that it will be useful,
+ * ABLS-AGENT-DLS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Watchdog; if not, write to the Free Software
+ * along with ABLS-AGENT-DLS; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
@@ -98,7 +98,7 @@
     return( (Agent->Top < bit->top ? (bit->top - Agent->Top) : 0) );
   }
 /******************************************************************************************************************************/
-/* Dls_data_WATCHDOG_set_from_thread_watchdog: Positionne un Watchdog dans DLS depuis un Watchdog 'thread'                    */
+/* Dls_data_WATCHDOG_set_from_thread_watchdog: Positionne un watchdog dans DLS depuis un watchdog 'thread'                    */
 /* Entrées: la structure JSON                                                                                                 */
 /* Sortie : TRUE si OK, sinon FALSE                                                                                           */
 /******************************************************************************************************************************/
