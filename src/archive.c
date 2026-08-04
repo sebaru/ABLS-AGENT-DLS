@@ -1,10 +1,10 @@
 /******************************************************************************************************************************/
-/* Watchdogd/Dls/The_dls_archive.c  Gestion des archives                                                                      */
-/* Projet Abls-Habitat version 4.7       Gestion d'habitat                                                27.11.2022 18:09:40 */
+/* ABLS-AGENT-DLS/src/archive.c  Gestion des archives                                                                        */
+/* Projet Abls-Habitat                   Gestion d'habitat                                                04.08.2026 00:00:00 */
 /* Auteur: LEFEVRE Sebastien                                                                                                  */
 /******************************************************************************************************************************/
 /*
- * The_dls_archive.c
+ * archive.c
  * This file is part of Abls-Habitat
  *
  * Copyright (C) 1988-2026 - Sébastien LEFÈVRE
@@ -26,14 +26,15 @@
  */
 
  #include "dls.h"
+ #include "archive.h"
 
  #define FACILITY_ARCHIVE "archive"
 
  /******************************************************************************************************************************/
-/* Dls_Send_archive_to_API: Ajoute une archive dans la base de données                                                        */
+/* Archive_Send_to_API: Ajoute une archive dans la base de données                                                           */
 /* Entrées: le type de bit, le numéro du bit, et sa valeur                                                                    */
 /******************************************************************************************************************************/
- void Dls_Send_archive_to_API( gchar *tech_id, gchar *acronyme, gdouble valeur )
+ void Archive_Send_to_API( gchar *tech_id, gchar *acronyme, gdouble valeur )
   { Info( __func__, FACILITY_ARCHIVE, tech_id, LOG_DEBUG, "Add Arch in list: '%s:%s'=%f", tech_id, acronyme, valeur );
     struct timeval tv;
     JsonNode *arch = Json_create();
@@ -48,20 +49,21 @@
   }
 
 /******************************************************************************************************************************/
-/* Dls_run_archivage: Gere l'archivage des bits internes le necessitant                                                       */
+/* Archive_run: Gere l'archivage des bits internes le necessitant                                                            */
 /* Entrée : le plugin a traiter                                                                                               */
 /* Sortie : rien                                                                                                              */
 /******************************************************************************************************************************/
- void Dls_run_archivage ( struct DLS_PLUGIN *plugin )
+ static void Archive_run ( struct DLS_PLUGIN *plugin )
   { if (!plugin) return;
     if (!plugin->enable) return;                                                        /* On archive pas les plugins disable */
+    if (Agent->Agent_run != AGENT_IS_RUNNING) return;                                           /* On archive pas si l'agent est en arret */
 
     GSList *liste = plugin->Dls_data_AI;
     while ( liste )
      { struct DLS_AI *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, (bit->in_range ? bit->valeur : 0.0) );            /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, (bit->in_range ? bit->valeur : 0.0) );            /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -72,7 +74,7 @@
      { struct DLS_AO *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -83,7 +85,7 @@
      { struct DLS_DI *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -94,7 +96,7 @@
      { struct DLS_DO *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -105,7 +107,7 @@
      { struct DLS_CI *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -116,7 +118,7 @@
      { struct DLS_CH *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
@@ -127,10 +129,17 @@
      { struct DLS_REGISTRE *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
+        { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
           bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
   }
+/******************************************************************************************************************************/
+/* Archive_all_thread: Gere l'archivage des bits internes le necessitant                                                       */
+/* Entrée : le plugin a traiter                                                                                               */
+/* Sortie : rien                                                                                                              */
+/******************************************************************************************************************************/
+ void Archive_all_thread ( void )
+  { Dls_foreach_plugins ( Archive_run ); }                                       /* Archivage au mieux toutes les minutes */
 /*----------------------------------------------------------------------------------------------------------------------------*/

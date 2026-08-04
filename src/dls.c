@@ -116,7 +116,7 @@
         { next_top_1min = Agent->Top + 600;
           Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min, TRUE );
           Dls_data_activer_horloge();
-          Dls_foreach_plugins ( Dls_run_archivage );                                 /* Archivage au mieux toutes les minutes */
+          Archive_all_thread();                                 /* Archivage au mieux toutes les minutes */
         }
 /******************************************************************************************************************************/
        if (Agent->Top>=next_top_10min)                                                               /* Toutes les 10 minutes */

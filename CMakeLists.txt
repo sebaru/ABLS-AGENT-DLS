@@ -53,7 +53,7 @@ add_executable(abls-agent-dls
   src/The_dls_TEMPO.c
   src/The_dls_VISUEL.c
   src/The_dls_WATCHDOG.c
-  src/The_dls_archive.c
+  src/archive.c
   src/The_dls_data.c
   src/distrib_outputs.c
   src/distrib_messages.c

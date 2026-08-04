@@ -110,7 +110,7 @@
         if (valeur) Agent_vars->Set_Dls_DI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_up,   bit );
           else Agent_vars->Set_Dls_DI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_down, bit );
         Agent_vars->audit_bit_interne_per_sec++;
-        Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
+        Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
         bit->last_arch = Agent->Top;
         Dls_DI_report_to_API ( bit );                                                                        /* envoi a l'API */
      }

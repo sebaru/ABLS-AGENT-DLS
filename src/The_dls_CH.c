@@ -127,7 +127,7 @@
  void Dls_data_CH_reset ( struct DLS_PLUGIN *plugin, struct DLS_CH *bit )
   { if (!bit) return;
     if (bit->valeur > 0)
-     { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                            /* Archivage si besoin */
+     { Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->valeur );                            /* Archivage si besoin */
        Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                 "ligne %04d: DLS_CH '%s:%s'=%d resetted",
                 (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
