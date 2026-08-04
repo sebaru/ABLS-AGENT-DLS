@@ -25,7 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_DI_create_by_array : Création d'un DI pour le plugin                                                              */
@@ -194,7 +194,7 @@
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
-       MQTT_Send_to_API   ( element, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_Send_mqtt_api_message ( Agent, element, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref    ( element );
      }
   }

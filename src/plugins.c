@@ -413,10 +413,10 @@
     struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id( tech_id );
     if (!plugin) { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "'%s': Plugin not found.", tech_id ); return; }
 
-    g_rw_lock_write_lock ( vars->Dls_plugins_lock );
+    g_rw_lock_writer_lock ( vars->Dls_plugins_lock );
     vars->Dls_plugins = g_slist_remove ( vars->Dls_plugins, plugin );
-    g_rw_lock_write_unlock ( vars->Dls_plugins_lock );
-    Dls_plugin_remap_all_alias();                                              /* Remap de tous les alias de tous les plugins */
+    g_rw_lock_writer_unlock ( vars->Dls_plugins_lock );
+    Dls_Plugin_remap_all_alias();                                              /* Remap de tous les alias de tous les plugins */
 
     Dls_Save_Data_to_API ( plugin );                                              /* Sauvegarde les valeurs des bits internes */
     if (plugin->handle && dlclose( plugin->handle ))
@@ -451,9 +451,10 @@
 /* Sortie: Rien                                                                                                               */
 /******************************************************************************************************************************/
  void Dls_Decharger_plugins ( void )
-  { while(Partage->Dls_plugins)                                                             /* Liberation mémoire des modules */
-     { struct DLS_PLUGIN *plugin = Partage->Dls_plugins->data;
-       Dls_decharger_un_plugin ( plugin->tech_id );
+  { struct ABLS_DLS_VARS *vars = Agent->vars;
+    while(vars->Dls_plugins)                                                                /* Liberation mémoire des modules */
+     { struct DLS_PLUGIN *plugin = vars->Dls_plugins->data;
+       Dls_Decharger_un_plugin ( plugin->tech_id );
      }
   }
 /******************************************************************************************************************************/
@@ -486,12 +487,12 @@
 /* Entrée: l'ID du plugin                                                                                                     */
 /* Sortie: Rien                                                                                                               */
 /******************************************************************************************************************************/
- void Dls_Acquitter_plugin ( struct ABLS_AGENT *agent, gchar *tech_id )
+ void Dls_Acquitter_plugin ( gchar *tech_id )
   { if (!tech_id)
      { Info( __func__, FACILITY_PLUGIN, NULL, LOG_ERR, "tech_id is null.");
        return;
      }
-    struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id ( agent, tech_id );
+    struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id ( tech_id );
     if (!plugin)
      { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "Plugin '%s' not found", tech_id );
        return;

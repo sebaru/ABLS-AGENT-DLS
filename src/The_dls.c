@@ -310,22 +310,80 @@
 /******************************************************************************************************************************/
 /* Main: Fonction principale du DLS                                                                                           */
 /******************************************************************************************************************************/
- void Run_dls ( void )
+ void Dls_loop ( void )
   { gint next_top_10sec, next_top_5sec, next_top_2sec, next_top_1sec, next_top_2hz, next_top_5hz, next_top_1min, next_top_10min;
 
-    setlocale( LC_ALL, "C" );                                            /* Pour le formattage correct des , . dans les float */
-    prctl(PR_SET_NAME, "W-DLS", 0, 0, 0 );
-    g_mkdir ( "Dls", 0700 );
-    Info( __func__, "dls", NULL, LOG_NOTICE, "Demarrage . . . TID = %p", pthread_self() );
-    Partage->Thread_run = TRUE;                                                                 /* Le thread tourne ! */
-    Prendre_heure();                                                     /* On initialise les variables de gestion de l'heure */
 
     next_top_5hz   = next_top_2hz  = Partage->top;                                                       /* Init des next top */
     next_top_1sec  = next_top_2sec = next_top_5sec = Partage->top + 10;
     next_top_1min  = Partage->top + 600;
     next_top_10min = Partage->top + 6000;
     while(Partage->Thread_run == TRUE)                                               /* On tourne tant que necessaire */
-     { pthread_mutex_lock( &Partage->synchro );                               /* Zone de protection des bits internes */
+     {
+
+             Dls_Start_top_horaire();
+       g_rw_lock_reader_lock ( &vars->Dls_plugins_lock );
+/******************************************************************************************************************************/
+       if (Partage->top>=next_top_5hz)                                                             /* Toutes les 1/5 secondes */
+        { next_top_5hz = Agent->Top + 2;
+          Dls_data_MONO_set ( NULL, vars->sys_top_5hz, TRUE );
+          Dls_data_BI_set   ( NULL, vars->sys_flipflop_5hz,
+                             !Dls_data_BI_get ( vars->sys_flipflop_5hz) );
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_2hz)                                                             /* Toutes les 1/2 secondes */
+         {next_top_2hz = Agent->Top + 5;
+          Dls_data_MONO_set ( NULL, vars->sys_top_2hz, TRUE );
+          Dls_data_BI_set   ( NULL, vars->sys_flipflop_2hz,
+                             !Dls_data_BI_get ( vars->sys_flipflop_2hz) );
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_1sec)                                                                /* Toutes les secondes */
+        { next_top_1sec = Agent->Top + 10;
+          Dls_data_MONO_set ( NULL, vars->sys_top_1sec, TRUE );
+          Dls_data_BI_set   ( NULL, vars->sys_flipflop_1sec,
+                             !Dls_data_BI_get ( vars->sys_flipflop_1sec) );
+
+          vars->audit_bit_interne_per_sec_hold += vars->audit_bit_interne_per_sec;
+          vars->audit_bit_interne_per_sec_hold = vars->audit_bit_interne_per_sec_hold >> 1;
+          vars->audit_bit_interne_per_sec = 0;                                                                  /* historique */
+          Dls_data_AI_set ( vars->sys_bit_per_sec, (gdouble)vars->audit_bit_interne_per_sec_hold, TRUE );
+        }
+/******************************************************************************************************************************/
+       if (Partage->top>=next_top_2sec)                                                              /* Toutes les 2 secondes */
+        { next_top_2sec = Agent->Top+20;
+          Dls_data_BI_set ( NULL, vars->sys_flipflop_2sec,
+                           !Dls_data_BI_get ( vars->sys_flipflop_2sec) );
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_5sec)                                                                /* Toutes les 5 secondes */
+        { next_top_5sec = Agent->Top + 50;
+          Dls_data_MONO_set ( NULL, vars->sys_top_5sec, TRUE );
+          Dls_foreach_plugins ( NULL, Dls_run_archivage );                        /* Archivage au mieux toutes les 5 secondes */
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_10sec)                                                              /* Toutes les 10 secondes */
+        { next_top_10sec = Agent->Top + 100;
+          Dls_data_MONO_set ( NULL, vars->sys_top_10sec, TRUE );
+          Dls_data_BI_set ( NULL, vars->sys_mqtt_connected, vars->MQTT_connected );
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_1min)                                                                   /* Toutes les minutes */
+        { next_top_1min = Agent->Top + 600;
+          Dls_data_MONO_set ( NULL, vars->sys_top_1min, TRUE );
+          Dls_Start_top_horaire ();                                        /* Mise à jour des variables de gestion de l'heure */
+          Dls_data_activer_horloge();
+        }
+/******************************************************************************************************************************/
+       if (Agent->Top>=next_top_10min)                                                             /* Toutes les 10 minutes */
+        { next_top_10min = Agent->Top + 6000;
+        }
+
+
+
+
+
+      pthread_mutex_lock( &Partage->synchro );                               /* Zone de protection des bits internes */
 /******************************************************************************************************************************/
        if (Partage->top>=next_top_5hz)                                                             /* Toutes les 1/5 secondes */
         { next_top_5hz = Partage->top + 2;

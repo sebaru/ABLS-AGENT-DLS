@@ -29,6 +29,9 @@
  #define _ABLS_AGENT_DLS_H_
 
  #include "abls-agent-libs.h"
+
+ #include "map.h"
+ #include "heure.h"
  #include "Module_dls.h"
 
  #define NBR_CARAC_TECHID     32
@@ -91,8 +94,7 @@
   };
 
  struct ABLS_DLS_VARS
-  { pthread_mutex_t synchro;
-    GSList *Dls_plugins;
+  { GSList *Dls_plugins;
     GRWLock Dls_plugins_lock;
 
     GSList *Set_Dls_DI_Edge_up;
@@ -112,8 +114,6 @@
     GSList *HORLOGE_actives;
     JsonNode *HORLOGE_ticks;
 
-    gboolean Top_check_horaire;
-
     struct DLS_BI *sys_flipflop_5hz;
     struct DLS_BI *sys_flipflop_2hz;
     struct DLS_BI *sys_flipflop_1sec;
@@ -131,13 +131,6 @@
     struct DLS_AI *sys_maxrss;
     struct DLS_AI *sys_log_per_min;
 
-    guint top;
-    guint top_cdg_plugin_dls;
-    guint audit_bit_interne_per_sec;
-    guint audit_bit_interne_per_sec_hold;
-    guint audit_tour_dls_per_sec;
-    guint audit_tour_dls_per_sec_hold;
-
     GRWLock Liste_DO_synchro;
     GSList *Liste_DO;
     GRWLock Liste_AO_synchro;
@@ -148,10 +141,6 @@
     GSList *Liste_msg;
   };
 
- extern gboolean Dls_create_agent_plugin ( struct ABLS_AGENT *agent );
- extern gboolean Dls_init ( struct ABLS_AGENT *agent );
- extern void     Dls_loop ( struct ABLS_AGENT *agent );
- extern void     Dls_end  ( struct ABLS_AGENT *agent );
 
  extern void Dls_set_cde_exterieure ( void );
  extern void Dls_reset_cde_exterieure ( void );

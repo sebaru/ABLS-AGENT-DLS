@@ -27,15 +27,16 @@
 
  #include <stdarg.h>
 
+ #include "map.h"
  #include "dls.h"
 
  extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
 
- JsonNode *Tree_root = NULL;                                                                  /* Racine de l'arbre de mapping */
- GTree    *Tree_to_local = NULL;                                                           /* Arbre de mapping agent -> local */
- GRWLock   Tree_to_local_lock;                                    /* Verrou de synchro pour l'arbre de mapping agent -> local */
- GTree    *Tree_to_agent = NULL;                                                           /* Arbre de mapping local -> agent */
- GRWLock   Tree_to_agent_lock;                                    /* Verrou de synchro pour l'arbre de mapping local -> agent */
+ static JsonNode *Tree_root = NULL;                                                           /* Racine de l'arbre de mapping */
+ static GTree    *Tree_to_local = NULL;                                                    /* Arbre de mapping agent -> local */
+ static GRWLock   Tree_to_local_lock;                             /* Verrou de synchro pour l'arbre de mapping agent -> local */
+ static GTree    *Tree_to_agent = NULL;                                                    /* Arbre de mapping local -> agent */
+ static GRWLock   Tree_to_agent_lock;                             /* Verrou de synchro pour l'arbre de mapping local -> agent */
 
 /******************************************************************************************************************************/
 /* MAP_Comparer_clef_agent: Compare deux noeuds JSON pour le tri par agent_tech_id et agent_acronyme                          */

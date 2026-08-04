@@ -309,11 +309,13 @@
                      );
 
  extern gint Dls_get_top( void );                                                                             /* donne le top */
- extern int Heure( int heure, int minute );                                                        /* Tester l'heure actuelle */
- extern int Heure_avant_egal( int heure, int minute );
- extern int Heure_apres_egal( int heure, int minute );
- extern int Heure_avant( int heure, int minute );
- extern int Heure_apres( int heure, int minute );
- extern int Jour_semaine( int jour );                                     /* Sommes nous le jour de la semaine en parametre ? */
+
+ extern gboolean Dls_Jour_semaine ( int jour );
+ extern gboolean Dls_Heure ( int heure, int minute );
+ extern gboolean Dls_Heure_apres ( int heure, int minute );
+ extern gboolean Dls_Heure_avant ( int heure, int minute );
+ extern gboolean Dls_Heure_apres_egal ( int heure, int minute );
+ extern gboolean Dls_Heure_avant_egal ( int heure, int minute );
+
  #endif
 /*----------------------------------------------------------------------------------------------------------------------------*/
