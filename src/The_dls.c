@@ -193,7 +193,7 @@
     else if (result < outputmin->valeur ) result = outputmin->valeur;
     Info( __func__, "dls", input->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_PID for '%s:%s'=> '%s:%s'=%f. Somme_Erreur = %f, Variation_Erreur = %f",
-              plugin->num_ligne,
+              (plugin ? plugin->num_ligne : -1),
               input->tech_id, input->acronyme,
               output->tech_id, output->acronyme, result,
               input->pid_somme_erreurs, variation_erreur

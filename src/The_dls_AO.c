@@ -90,7 +90,7 @@
     bit->valeur = valeur;                                                           /* Archive au mieux toutes les 5 secondes */
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_AO '%s:%s'=%f %s",
-              plugin->num_ligne, bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
+              (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
     JsonNode *RootNode = Json_create ();
     if (RootNode)
      { Dls_AO_to_json ( RootNode, bit );
