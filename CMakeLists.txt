@@ -37,6 +37,7 @@ add_executable(abls-agent-dls
   src/dls.c
   src/plugins.c
   src/heure.c
+  src/map.c
   src/The_dls.c
   src/The_dls_AI.c
   src/The_dls_AO.c
@@ -54,6 +55,8 @@ add_executable(abls-agent-dls
   src/The_dls_WATCHDOG.c
   src/The_dls_archive.c
   src/The_dls_data.c
+  src/distrib_outputs.c
+  src/distrib_messages.c
 )
 
 target_include_directories(abls-agent-dls PRIVATE

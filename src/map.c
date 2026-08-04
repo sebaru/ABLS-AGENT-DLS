@@ -27,7 +27,8 @@
 
  #include <stdarg.h>
 
- #include "map.h"
+ #include "dls.h"
+
 
  static JsonNode *Tree_root = NULL;                                                           /* Racine de l'arbre de mapping */
  static GTree    *Tree_to_local = NULL;                                                    /* Arbre de mapping agent -> local */
@@ -167,7 +168,7 @@
 void MAP_Remap( void )
  {
    MAP_Clear();
-   Tree_root = Http_Post_to_global_API_compat ( "/run/mapping/list", NULL );
+   Tree_root = Http_Post_to_global_API ( Agent, "/run/mapping/list", NULL );
    if (Tree_root && Json_get_int ( Tree_root, "http_code" ) == 200)
     { GList *results = json_array_get_elements ( Json_get_array ( Tree_root, "mappings" ) );
       GList *result = results;
@@ -196,13 +197,13 @@ void MAP_Remap( void )
 /* Sortie: neant                                                                                                                      */
 /******************************************************************************************************************************/
 void MQTT_Send_archive_to_API_compat ( gchar *tech_id, gchar *acronyme, gdouble valeur )
- { if (!Dls_agent || !tech_id || !acronyme) return;
+ { if (!Agent || !tech_id || !acronyme) return;
    JsonNode *payload = Json_create();
    if (!payload) return;
    Json_add_string ( payload, "tech_id", tech_id );
    Json_add_string ( payload, "acronyme", acronyme );
    Json_add_double ( payload, "valeur", valeur );
-   Agent_send_mqtt_api_message ( Dls_agent, payload, FALSE, "DLS_ARCHIVE/%s/%s", tech_id, acronyme );
+   Agent_send_mqtt_api_message ( Agent, payload, FALSE, "DLS_ARCHIVE/%s/%s", tech_id, acronyme );
    Json_unref ( payload );
  }
 /*----------------------------------------------------------------------------------------------------------------------------*/

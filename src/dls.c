@@ -29,6 +29,7 @@
 
  #include "dls.h"
  struct ABLS_AGENT *Agent = NULL;                                                                 /* Structure de l'agent DLS */
+ struct ABLS_DLS_VARS *Agent_vars = NULL;                                                         /* Structure des variables de l'agent DLS */
 
 /******************************************************************************************************************************/
 /* main: Point d'entree de l'agent DLS                                                                                        */
@@ -164,7 +165,7 @@
        while ( (mqtt_api_message = Agent_get_mqtt_api_message ( Agent ) ) != NULL )
         { if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "+", "RELOAD" ) )
            { gchar *target = Json_get_string ( mqtt_api_message, "mqtt_topic_lvl2" );
-             Dls_Importer_un_plugin ( target );
+             Dls_Reload_un_plugin ( target );
            }
           else if ( Mqtt_topic_is ( mqtt_api_message, 2, "+", "DLS", "REMAP" ) )
            { MAP_Remap(); }

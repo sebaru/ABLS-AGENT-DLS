@@ -110,9 +110,9 @@
         if (valeur) Agent_vars->Set_Dls_DI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_up,   bit );
           else Agent_vars->Set_Dls_DI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_DI_Edge_down, bit );
         Agent_vars->audit_bit_interne_per_sec++;
-       MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
+        Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
         bit->last_arch = Agent->Top;
-      Dls_DI_report_to_API ( bit );                                                                         /* envoi a l'API */
+        Dls_DI_report_to_API ( bit );                                                                        /* envoi a l'API */
      }
   }
 /******************************************************************************************************************************/
@@ -141,7 +141,7 @@
     gchar *tech_id        = agent_tech_id;
     gchar *acronyme       = agent_acronyme;
 
-    if (MSRV_Map_from_agent ( request ) && Json_has_member ( request, "tech_id" ) && Json_has_member ( request, "acronyme" ) )
+    if (MAP_to_local ( request ))
      { tech_id  = Json_get_string ( request, "tech_id" );
        acronyme = Json_get_string ( request, "acronyme" );
      }

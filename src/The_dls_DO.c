@@ -94,7 +94,7 @@
               "ligne %04d: Changing DLS_DO '%s:%s'=%d ",
               (plugin ? plugin->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
     Dls_DO_report_to_API ( dout );                                                                           /* envoi a l'API */
-    MQTT_Send_archive_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                         /* Archivage si besoin */
+    Dls_Send_archive_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                          /* Archivage si besoin */
     dout->last_arch = Agent->Top;
 
     JsonNode *RootNode = Json_create ();

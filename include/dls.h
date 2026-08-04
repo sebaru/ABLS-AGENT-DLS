@@ -336,7 +336,7 @@ enum                                                                            
 
  extern void Dls_Decharger_un_plugin ( gchar *tech_id );
  extern void Dls_Decharger_plugins ( void );
- extern struct DLS_PLUGIN *Dls_Importer_un_plugin ( gchar *tech_id );
+ extern struct DLS_PLUGIN *Dls_Reload_un_plugin ( gchar *tech_id );
  extern void Dls_Importer_plugins ( void );
  extern gboolean Dls_auto_create_plugin( JsonNode *RootNode );
  extern void Dls_Debug_plugin ( gchar *tech_id, gboolean actif );
@@ -344,6 +344,7 @@ enum                                                                            
  extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) );
  extern void Dls_Acquitter_plugin ( gchar *tech_id );
  extern struct DLS_PLUGIN *Dls_get_plugin_by_tech_id ( gchar *tech_id );
+ extern void Dls_Send_archive_to_API( gchar *tech_id, gchar *acronyme, gdouble valeur );
  extern void Dls_run_archivage ( struct DLS_PLUGIN *plugin );
  extern void Dls_sync_all_output ( gpointer user_data, struct DLS_PLUGIN *plugin );
  extern void Dls_Save_Data_to_API ( struct DLS_PLUGIN *plugin );
@@ -490,6 +491,9 @@ enum                                                                            
                      );
 
  extern gint Dls_get_top( void );                                                                             /* donne le top */
+
+ extern void Distribuer_outputs( void );                                                              /* Distribution des sorties DO et AO */
+ extern gchar *Convert_libelle_dynamique( gchar *libelle_src );                                         /* Conversion libelle dynamique */
 
  #endif
 /*----------------------------------------------------------------------------------------------------------------------------*/

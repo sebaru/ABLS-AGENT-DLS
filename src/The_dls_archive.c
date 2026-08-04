@@ -25,20 +25,27 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <fcntl.h>
- #include <string.h>
- #include <signal.h>
- #include <stdio.h>
- #include <unistd.h>
- #include <stdlib.h>
- #include <sys/time.h>
- #include <sys/prctl.h>
- #include <semaphore.h>
- #include <locale.h>
- #include <math.h>
+ #include "dls.h"
 
- #include "watchdogd.h"
+ #define FACILITY_ARCHIVE "archive"
+
+ /******************************************************************************************************************************/
+/* Dls_Send_archive_to_API: Ajoute une archive dans la base de données                                                        */
+/* Entrées: le type de bit, le numéro du bit, et sa valeur                                                                    */
+/******************************************************************************************************************************/
+ void Dls_Send_archive_to_API( gchar *tech_id, gchar *acronyme, gdouble valeur )
+  { Info( __func__, FACILITY_ARCHIVE, tech_id, LOG_DEBUG, "Add Arch in list: '%s:%s'=%f", tech_id, acronyme, valeur );
+    struct timeval tv;
+    JsonNode *arch = Json_create();
+    if (!arch) return;
+
+    gettimeofday( &tv, NULL );                                                                   /* On prend l'heure actuelle */
+    Json_add_double( arch, "valeur",    valeur );
+    Json_add_int   ( arch, "date_sec",  tv.tv_sec );
+    Json_add_int   ( arch, "date_usec", tv.tv_usec );
+    Agent_send_mqtt_api_message ( Agent, arch, FALSE, "DLS_ARCHIVE/%s/%s", tech_id, acronyme );
+    Json_unref( arch );
+  }
 
 /******************************************************************************************************************************/
 /* Dls_run_archivage: Gere l'archivage des bits internes le necessitant                                                       */
@@ -54,8 +61,8 @@
      { struct DLS_AI *bit = liste->data;
        if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, (bit->in_range ? bit->valeur : 0.0) );            /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, (bit->in_range ? bit->valeur : 0.0) );            /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -63,10 +70,10 @@
     liste = plugin->Dls_data_AO;
     while ( liste )
      { struct DLS_AO *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -74,10 +81,10 @@
     liste = plugin->Dls_data_DI;
     while ( liste )
      { struct DLS_DI *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -85,10 +92,10 @@
     liste = plugin->Dls_data_DO;
     while ( liste )
      { struct DLS_DO *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                                  /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -96,10 +103,10 @@
     liste = plugin->Dls_data_CI;
     while ( liste )
      { struct DLS_CI *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -107,10 +114,10 @@
     liste = plugin->Dls_data_CH;
     while ( liste )
      { struct DLS_CH *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur*1.0 );                                /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
@@ -118,10 +125,10 @@
     liste = plugin->Dls_data_REGISTRE;
     while ( liste )
      { struct DLS_REGISTRE *bit = liste->data;
-       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Partage->top))       /* Archivage demandé & il est temps ? */
+       if ( (bit->archivage && (bit->last_arch + bit->archivage <= Agent->Top))       /* Archivage demandé & il est temps ? */
           || bit->last_arch == 0)                                                                                 /* a L'init */
-        { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
-          bit->last_arch = Partage->top;
+        { Dls_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                                    /* Archivage si besoin */
+          bit->last_arch = Agent->Top;
         }
        liste = g_slist_next ( liste );
      }
