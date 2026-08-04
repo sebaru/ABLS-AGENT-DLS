@@ -25,15 +25,17 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <stdarg.h>
+ #include <stdarg.h>
 
-#include "dls.h"
+ #include "dls.h"
+
+ extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
 
  JsonNode *Tree_root = NULL;                                                                  /* Racine de l'arbre de mapping */
- GTree *Tree_to_local = NULL;                                                              /* Arbre de mapping agent -> local */
- GRWLock Tree_to_local_lock;                                      /* Verrou de synchro pour l'arbre de mapping agent -> local */
- GTree *Tree_to_agent = NULL;                                                              /* Arbre de mapping local -> agent */
- GRWLock Tree_to_agent_lock;                                      /* Verrou de synchro pour l'arbre de mapping local -> agent */
+ GTree    *Tree_to_local = NULL;                                                           /* Arbre de mapping agent -> local */
+ GRWLock   Tree_to_local_lock;                                    /* Verrou de synchro pour l'arbre de mapping agent -> local */
+ GTree    *Tree_to_agent = NULL;                                                           /* Arbre de mapping local -> agent */
+ GRWLock   Tree_to_agent_lock;                                    /* Verrou de synchro pour l'arbre de mapping local -> agent */
 
 /******************************************************************************************************************************/
 /* MAP_Comparer_clef_agent: Compare deux noeuds JSON pour le tri par agent_tech_id et agent_acronyme                          */
@@ -86,21 +88,38 @@
 /* Entree: néant                                                                                                              */
 /* Sortie: néant                                                                                                              */
 /******************************************************************************************************************************/
- void MAP_init ( void )
+ void MAP_Init ( void )
   { Tree_to_local = NULL;
     Tree_to_agent = NULL;
     g_rw_lock_init ( &Tree_to_local_lock );
     g_rw_lock_init ( &Tree_to_agent_lock );
   }
 /******************************************************************************************************************************/
+/* MAP_Clear: Efface les mappings                                                                                             */
+/* Entree: neant                                                                                                              */
+/* Sortie: neant                                                                                                              */
+/******************************************************************************************************************************/
+ static void MAP_Clear( void )
+  { g_rw_lock_writer_lock ( &Tree_to_agent_lock );
+    g_tree_destroy ( Tree_to_agent );
+    Tree_to_agent = NULL;
+    g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
+
+    g_rw_lock_writer_lock ( &Tree_to_local_lock );
+    g_tree_destroy ( Tree_to_local );
+    Tree_to_local = NULL;
+    g_rw_lock_writer_unlock ( &Tree_to_local_lock );
+
+    Json_unref ( Tree_root );
+    Tree_root = NULL;
+  }
+/******************************************************************************************************************************/
 /* MAP_end: Libère les elements de gestion des mappings                                                                       */
 /* Entree: néant                                                                                                              */
 /* Sortie: néant                                                                                                              */
 /******************************************************************************************************************************/
- void MAP_end ( void )
-  { g_tree_destroy ( Tree_to_local );
-    g_tree_destroy ( Tree_to_agent );
-    Json_unref ( Tree_root );
+ void MAP_End ( void )
+  { MAP_Clear();
     g_rw_lock_clear ( &Tree_to_local_lock );
     g_rw_lock_clear ( &Tree_to_agent_lock );
   }
@@ -141,25 +160,6 @@
     }
     g_rw_lock_reader_unlock ( &Tree_to_agent_lock );
     return( (found ? TRUE : FALSE ) );
-  }
-/******************************************************************************************************************************/
-/* MAP_Clear: Efface les mappings                                                                                             */
-/* Entree: neant                                                                                                              */
-/* Sortie: neant                                                                                                              */
-/******************************************************************************************************************************/
- static void MAP_Clear( void )
-  { g_rw_lock_writer_lock ( &Tree_to_agent_lock );
-    g_tree_destroy ( Tree_to_agent );
-    Tree_to_agent = NULL;
-    g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
-
-    g_rw_lock_writer_lock ( &Tree_to_local_lock );
-    g_tree_destroy ( Tree_to_local );
-    Tree_to_local = NULL;
-    g_rw_lock_writer_unlock ( &Tree_to_local_lock );
-
-    Json_unref ( Tree_root );
-    Tree_root = NULL;
   }
 /******************************************************************************************************************************/
 /* MAP_Remap: Recharge les mappings depuis l'API globale                                                                      */

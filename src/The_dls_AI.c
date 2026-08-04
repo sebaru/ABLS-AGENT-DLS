@@ -1,5 +1,5 @@
 /******************************************************************************************************************************/
-/* Watchdogd/Dls/The_dls_AI.c  Gestion des Analog Input                                                                       */
+/* ABLS-AGENT-DLS/The_dls_AI.c  Gestion des Analog Input                                                                      */
 /* Projet Abls-Habitat version 4.7       Gestion d'habitat                                                30.01.2022 14:07:24 */
 /* Auteur: LEFEVRE Sebastien                                                                                                  */
 /******************************************************************************************************************************/
@@ -9,23 +9,23 @@
  *
  * Copyright (C) 1988-2026 - Sébastien LEFÈVRE
  *
- * Watchdog is free software; you can redistribute it and/or modify
+ * ABLS-AGENT-DLS is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * Watchdog is distributed in the hope that it will be useful,
+ * ABLS-AGENT-DLS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Watchdog; if not, write to the Free Software
+ * along with ABLS-AGENT-DLS; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
 
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_AI_create_by_array : Création d'un AI pour le plugin                                                              */
@@ -37,7 +37,7 @@
     gchar *acronyme = Json_get_string ( element, "acronyme" );
     struct DLS_AI *bit = g_try_malloc0 ( sizeof(struct DLS_AI) );
     if (!bit)
-    { Info( __func__, "dls", tech_id, LOG_ERR, "Memory error for '%s:%s'", tech_id, acronyme );
+     { Info( __func__, "dls", tech_id, LOG_ERR, "Memory error for '%s:%s'", tech_id, acronyme );
        return;
      }
     g_snprintf( bit->tech_id,  sizeof(bit->tech_id),  "%s", tech_id );
@@ -49,8 +49,8 @@
     bit->in_range  = Json_get_bool   ( element, "in_range"  );
     plugin->Dls_data_AI = g_slist_prepend ( plugin->Dls_data_AI, bit );
     Info( __func__, "dls", tech_id, LOG_INFO,
-              "Create bit DLS_AI '%s:%s'=%f %s (%s) archivage=%d",
-              bit->tech_id, bit->acronyme, bit->valeur, bit->unite, bit->libelle, bit->archivage );
+          "Create bit DLS_AI '%s:%s'=%f %s (%s) archivage=%d",
+          bit->tech_id, bit->acronyme, bit->valeur, bit->unite, bit->libelle, bit->archivage );
   }
 /******************************************************************************************************************************/
 /* Dls_data_AI_lookup : Recherche un CH dans les plugins DLS                                                                  */
@@ -117,7 +117,7 @@
     gchar *tech_id        = agent_tech_id;
     gchar *acronyme       = agent_acronyme;
 
-    if (MSRV_Map_from_agent ( request ) && Json_has_member ( request, "tech_id" ) && Json_has_member ( request, "acronyme" ) )
+    if (MAP_to_local ( request ) )
      { tech_id  = Json_get_string ( request, "tech_id" );
        acronyme = Json_get_string ( request, "acronyme" );
      }
@@ -172,12 +172,12 @@
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_AI_export_to_API ( struct DLS_AI *bit )
+ void Dls_AI_export_to_API ( struct ABLS_AGENT *agent, struct DLS_AI *bit )
   { JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_double ( element, "valeur",    bit->valeur );
-       Json_add_bool   ( element, "in_range",  bit->in_range );
-       MQTT_Send_to_API     ( element, "DLS_REPORT/AI/%s/%s", bit->tech_id, bit->acronyme );
+    if (element && bit)
+     { Json_add_double ( element, "valeur",   bit->valeur );
+       Json_add_bool   ( element, "in_range", bit->in_range );
+       Agent_send_mqtt_api_message ( agent, element, "DLS_REPORT/AI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref      ( element );
      }
   }

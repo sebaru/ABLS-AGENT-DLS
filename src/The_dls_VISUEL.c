@@ -267,9 +267,9 @@
     while ( liste )
      { struct DLS_VISUEL *visu = liste->data;
        if (visu->changed && (Partage->top >= visu->next_send))
-        { pthread_rwlock_wrlock( &Partage->Liste_visuel_synchro );                      /* Ajout dans la liste de i a traiter */
+        { g_rw_lock_writer_lock( &Partage->Liste_visuel_synchro );                      /* Ajout dans la liste de i a traiter */
           Partage->Liste_visuel = g_slist_append( Partage->Liste_visuel, visu );
-          pthread_rwlock_unlock( &Partage->Liste_visuel_synchro );
+          g_rw_lock_writer_unlock( &Partage->Liste_visuel_synchro );
           visu->changed = FALSE;
           visu->next_send = Partage->top + 10;                                                  /* Next update dans 1 seconde */
           Partage->audit_bit_interne_per_sec++;

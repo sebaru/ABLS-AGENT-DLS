@@ -27,7 +27,7 @@
 
  #include <time.h>
 
- #include "watchdogd.h"
+ #include "dls.h"
  #include "Module_dls.h"                                    /* Inclusion des prototypes de fonctions de controle/commande DLS */
 
  static int nbr_heure, nbr_minute;                                                     /* Gestion des demarrages à heure fixe */

@@ -93,6 +93,7 @@
  struct ABLS_DLS_VARS
   { pthread_mutex_t synchro;
     GSList *Dls_plugins;
+    GRWLock Dls_plugins_lock;
 
     GSList *Set_Dls_DI_Edge_up;
     GSList *Set_Dls_DI_Edge_down;
@@ -111,7 +112,6 @@
     GSList *HORLOGE_actives;
     JsonNode *HORLOGE_ticks;
 
-    guint temps_sched;
     gboolean Top_check_horaire;
 
     struct DLS_BI *sys_flipflop_5hz;
@@ -138,13 +138,13 @@
     guint audit_tour_dls_per_sec;
     guint audit_tour_dls_per_sec_hold;
 
-    pthread_rwlock_t Liste_DO_synchro;
+    GRWLock Liste_DO_synchro;
     GSList *Liste_DO;
-    pthread_rwlock_t Liste_AO_synchro;
+    GRWLock Liste_AO_synchro;
     GSList *Liste_AO;
-    pthread_rwlock_t Liste_visuel_synchro;
+    GRWLock Liste_visuel_synchro;
     GSList *Liste_visuel;
-    pthread_rwlock_t Liste_msg_synchro;
+    GRWLock Liste_msg_synchro;
     GSList *Liste_msg;
   };
 

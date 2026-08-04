@@ -25,61 +25,50 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <string.h>
+ #include <string.h>
 
-#include "dls.h"
+ #include "dls.h"
+ struct ABLS_AGENT *Agent = NULL;                                                                 /* Structure de l'agent DLS */
 
 /******************************************************************************************************************************/
-/* main: Point d'entree de l'agent DLS                                                                                               */
-/* Entree: argc - nombre d'arguments                                                                                                  */
-/*         argv - tableau des arguments                                                                                                */
-/* Sortie: 0 en cas de succes, 1 en cas d'erreur                                                                                       */
+/* main: Point d'entree de l'agent DLS                                                                                        */
+/* Entree: argc - nombre d'arguments                                                                                          */
+/*         argv - tableau des arguments                                                                                       */
+/* Sortie: 0 en cas de succes, 1 en cas d'erreur                                                                              */
 /******************************************************************************************************************************/
  gint main ( gint argc, gchar *argv[] )
-  { struct ABLS_AGENT *agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct ABLS_DLS_VARS), argc, argv );
-    struct ABLS_DLS_VARS *vars = (struct ABLS_DLS_VARS *)agent->vars;
+  { setenv ( "ABLS_AGENT_TECH_ID", "DLS", 1 );
+    Agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct ABLS_DLS_VARS), argc, argv );
+    struct ABLS_DLS_VARS *vars = (struct ABLS_DLS_VARS *)Agent->vars;
 
-    pthread_mutexattr_t m_attr;
-    pthread_mutexattr_init ( &m_attr );
-    pthread_mutex_init ( &vars->synchro, &m_attr );
-
-    pthread_rwlockattr_t rw_attr;
-    pthread_rwlockattr_init ( &rw_attr );
-    pthread_rwlock_init ( &vars->Liste_DO_synchro, &rw_attr );
-    pthread_rwlock_init ( &vars->Liste_AO_synchro, &rw_attr );
-    pthread_rwlock_init ( &vars->Liste_visuel_synchro, &rw_attr );
-    pthread_rwlock_init ( &vars->Liste_msg_synchro, &rw_attr );
-    pthread_rwlock_init ( &vars->Maps_synchro, &rw_attr );
-
+    g_rw_lock_init ( &vars->Dls_plugins_lock );
+    g_rw_lock_init ( &vars->Liste_DO_synchro );
+    g_rw_lock_init ( &vars->Liste_AO_synchro );
+    g_rw_lock_init ( &vars->Liste_visuel_synchro );
+    g_rw_lock_init ( &vars->Liste_msg_synchro );
 
     vars->Top_check_horaire = TRUE;
-    vars->temps_sched = 10000;
 
     Agent_is_ready ( agent );                                                                             /* L'agent est pret */
 
-    MAP_init();
-    MSRV_Remap();
+    Agent_set_status ( agent, "Loading mappings..." );
+    MAP_Init();
+    MAP_Remap();
     Agent_set_status ( agent, "Loading plugins..." );
-    Dls_Importer_plugins();
+    Dls_Importer_plugins( agent );
     Dls_Load_horloge_ticks();
 
     Agent_set_status ( agent, "Agent is running." );
     while(agent->Agent_run == AGENT_IS_RUNNING)
      { Agent_loop ( agent );
 /*----------------------------------------------------------- Loop D.L.S -----------------------------------------------------*/
-       vars->top++;
-       Dls_update_runtime_signals();
        Prendre_heure();
 
-       pthread_mutex_lock ( &vars->synchro );
        Dls_set_edge();
        Dls_set_cde_exterieure();
-       Dls_foreach_plugins ( NULL, Dls_run_plugin );
-       Dls_foreach_plugins ( NULL, Dls_apply_message_cb );
-       Dls_foreach_plugins ( NULL, Dls_apply_visuel_cb );
+       Dls_foreach_plugins ( agent, Dls_run_plugin );
        Dls_reset_edge();
        Dls_reset_cde_exterieure();
-       pthread_mutex_unlock ( &vars->synchro );
 
 /*----------------------------------------------------------- Ecoute du Master -----------------------------------------------*/
        JsonNode *mqtt_local_message;
@@ -119,14 +108,14 @@
 
     Dls_Decharger_plugins();
 
-    pthread_rwlock_destroy ( &vars->Liste_DO_synchro );
-    pthread_rwlock_destroy ( &vars->Liste_AO_synchro );
-    pthread_rwlock_destroy ( &vars->Liste_visuel_synchro );
-    pthread_rwlock_destroy ( &vars->Liste_msg_synchro );
-    pthread_rwlock_destroy ( &vars->Maps_synchro );
+    g_rw_lock_clear ( &vars->Dls_plugins_lock );
+    g_rw_lock_clear ( &vars->Liste_DO_synchro );
+    g_rw_lock_clear ( &vars->Liste_AO_synchro );
+    g_rw_lock_clear ( &vars->Liste_visuel_synchro );
+    g_rw_lock_clear ( &vars->Liste_msg_synchro );
     pthread_mutex_destroy  ( &vars->synchro );
 
-    MAP_end();
+    MAP_End();
 
     Agent_end ( agent );
     return(0);

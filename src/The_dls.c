@@ -227,9 +227,9 @@
        JsonNode *RootNode = Json_create ();
        if (RootNode)
         { Dls_DO_to_json ( RootNode, bit );
-          pthread_rwlock_wrlock ( &Partage->Liste_DO_synchro );
+          g_rw_lock_writer_lock ( &Partage->Liste_DO_synchro );
           Partage->Liste_DO = g_slist_append ( Partage->Liste_DO, RootNode );
-          pthread_rwlock_unlock ( &Partage->Liste_DO_synchro );
+          g_rw_lock_writer_unlock ( &Partage->Liste_DO_synchro );
         }
        else Info( __func__, "dls", NULL, LOG_ERR, "JSon RootNode creation failed" );
        liste = g_slist_next ( liste );
@@ -241,9 +241,9 @@
        JsonNode *RootNode = Json_create ();
        if (RootNode)
         { Dls_AO_to_json ( RootNode, bit );
-          pthread_rwlock_wrlock ( &Partage->Liste_AO_synchro );
+          g_rw_lock_writer_lock ( &Partage->Liste_AO_synchro );
           Partage->Liste_AO = g_slist_append ( Partage->Liste_AO, RootNode );
-          pthread_rwlock_unlock ( &Partage->Liste_AO_synchro );
+          g_rw_lock_writer_unlock ( &Partage->Liste_AO_synchro );
         }
        else Info( __func__, "dls", NULL, LOG_ERR, "JSon RootNode creation failed" );
        liste = g_slist_next ( liste );

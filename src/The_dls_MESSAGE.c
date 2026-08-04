@@ -122,9 +122,9 @@
      }
     event->etat = msg->new_etat;                                                        /* Recopie de l'état dans l'evenement */
     event->msg  = msg;
-    pthread_rwlock_wrlock( &Partage->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
+    g_rw_lock_writer_lock( &Partage->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
     Partage->Liste_msg  = g_slist_append( Partage->Liste_msg, event );
-    pthread_rwlock_unlock( &Partage->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
+    g_rw_lock_writer_unlock( &Partage->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
   }
 /******************************************************************************************************************************/
 /* Met à jour le message en parametre                                                                                         */

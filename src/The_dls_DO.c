@@ -107,9 +107,9 @@
     JsonNode *RootNode = Json_create ();
     if (RootNode)
      { Dls_DO_to_json ( RootNode, dout );
-       pthread_rwlock_wrlock ( &Partage->Liste_DO_synchro );                      /* Envoie au MSRV pour dispatch aux threads */
+       g_rw_lock_writer_lock ( &Partage->Liste_DO_synchro );                      /* Envoie au MSRV pour dispatch aux threads */
        Partage->Liste_DO = g_slist_append ( Partage->Liste_DO, RootNode );
-       pthread_rwlock_unlock ( &Partage->Liste_DO_synchro );
+       g_rw_lock_writer_unlock ( &Partage->Liste_DO_synchro );
      }
     else Info( __func__, "dls", dout->tech_id, LOG_ERR, "JSon RootNode creation failed" );
 
@@ -118,9 +118,9 @@
        if (RootNode)
         { Dls_DO_to_json ( RootNode, dout );
           Json_add_bool ( RootNode, "etat", FALSE );                                    /* Passage a zero dans la foulée */
-          pthread_rwlock_wrlock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
+          g_rw_lock_writer_lock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
           Partage->Liste_DO = g_slist_append ( Partage->Liste_DO, RootNode );
-          pthread_rwlock_unlock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
+          g_rw_lock_writer_unlock ( &Partage->Liste_DO_synchro );                   /* Envoie au MSRV pour dispatch aux threads */
         }
       else Info( __func__, "dls", dout->tech_id, LOG_ERR, "JSon RootNode creation failed" );
      }
