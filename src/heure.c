@@ -27,21 +27,18 @@
 
  #include <time.h>
 
- #include "dls.h"
- #include "Module_dls.h"                                    /* Inclusion des prototypes de fonctions de controle/commande DLS */
-
- extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
+ #include "heure.h"
 
  static gint nbr_heure, nbr_minute;                                                    /* Gestion des demarrages à heure fixe */
  static gint num_jour_semaine;                                                                /* Numéro du jour de la semaine */
  static gboolean top_horaire = FALSE;                          /* Indique que l'heure a été mise à jour par Dls_Top_horaire() */
 
 /******************************************************************************************************************************/
-/* Dls_Top_horaire: Prend la date/heure actuelle de la machine. Appelée toutes les minutes par DLS                            */
+/* Dls_Check_horaire: Prend la date/heure actuelle de la machine. Appelée toutes les minutes par DLS                            */
 /* Entrée: rien                                                                                                               */
 /* Sortie: les variables globales de gestion de l'heure sont mises à jour                                                     */
 /******************************************************************************************************************************/
- void Dls_Start_top_horaire ( void )
+ void Dls_Check_top_horaire ( void )
   { struct tm tm;
     time_t temps;
 

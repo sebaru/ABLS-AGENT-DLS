@@ -40,8 +40,6 @@
 /************************************************** Prototypes de fonctions ***************************************************/
  #include "dls.h"
 
- extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
-
  #define FACILITY_PLUGIN "plugin"
 
 /******************************************************************************************************************************/
@@ -50,11 +48,10 @@
 /* Sortie: le plugin DLS ou NULL si besoin                                                                                    */
 /******************************************************************************************************************************/
  struct DLS_PLUGIN *Dls_get_plugin_by_tech_id ( gchar *tech_id )
-  { struct ABLS_DLS_VARS *vars = Agent->vars;
-    struct DLS_PLUGIN *found = NULL;
+  { struct DLS_PLUGIN *found = NULL;
 
-    g_rw_lock_reader_lock ( &vars->Dls_plugins_lock );
-    GSList *liste = vars->Dls_plugins;
+    g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
+    GSList *liste = Agent_vars->Dls_plugins;
     while (liste)
      { struct DLS_PLUGIN *plugin;
        plugin = (struct DLS_PLUGIN *)liste->data;
@@ -62,7 +59,7 @@
         { found = plugin; break; }
        liste = liste->next;
      }
-    g_rw_lock_reader_unlock ( &vars->Dls_plugins_lock );
+    g_rw_lock_reader_unlock ( &Agent_vars->Dls_plugins_lock );
     return(found);
   }
 /******************************************************************************************************************************/
@@ -71,15 +68,14 @@
 /* Sortie : rien                                                                                                              */
 /******************************************************************************************************************************/
  void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) )
-  { struct ABLS_DLS_VARS *vars = Agent->vars;
-    g_rw_lock_reader_lock ( &vars->Dls_plugins_lock );
-    GSList *liste = vars->Dls_plugins;
+  { g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
+    GSList *liste = Agent_vars->Dls_plugins;
     while (liste)
      { struct DLS_PLUGIN *plugin = liste->data;
        do_plugin( plugin );
        liste = liste->next;
      }
-    g_rw_lock_reader_unlock ( &vars->Dls_plugins_lock );
+    g_rw_lock_reader_unlock ( &Agent_vars->Dls_plugins_lock );
   }
 /******************************************************************************************************************************/
 /* Activer_plugin_by_id: Active ou non un plugin by id                                                                        */
@@ -149,7 +145,7 @@
   { gchar source_file[128], target_file[128];
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Compilation of '%s' started", tech_id );
-    gint top = Partage->top;
+    gint top = Agent->Top;
     g_snprintf( source_file, sizeof(source_file), "Dls/%s.c", tech_id );
     g_snprintf( target_file, sizeof(target_file),  "Dls/libdls%s.so", tech_id );
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "Starting GCC." );
@@ -176,7 +172,7 @@
     gint gcc_return_code = WEXITSTATUS(wcode);
     if (gcc_return_code == 1) unlink(target_file);
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "gcc pid %d is down with return code %d", pidgcc, gcc_return_code );
-    Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Partage->top - top)/10.0 );
+    Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Agent->Top - top)/10.0 );
     return(TRUE);
   }
 /******************************************************************************************************************************/
@@ -250,57 +246,56 @@
 /* Sortie : les alias sont mappés                                                                                             */
 /******************************************************************************************************************************/
  static void Dls_plugins_remap_all_alias ( void )
-  { struct ABLS_DLS_VARS *vars = Agent->vars;
-    g_rw_lock_reader_lock ( &vars->Dls_plugin_lock );
-    GSList *liste = vars->Dls_plugins;
+  { g_rw_lock_reader_lock ( &Agent_Agent_vars->Dls_plugins_lock );
+    GSList *liste = Agent_Agent_vars->Dls_plugins;
     while (liste)
      { struct DLS_PLUGIN *plugin = liste->data;
        if (plugin->handle && plugin->remap_all_alias)
-        { plugin->remap_all_alias(&plugin->vars);
+        { plugin->remap_all_alias(plugin);
           Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_DEBUG, "Remapping Alias for '%s' OK", plugin->tech_id );
         }
        else Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_ERR, "Remapping Alias for '%s' Failed", plugin->tech_id );
 
        if (!strcasecmp ( plugin->tech_id, "SYS" ) )                         /* Mapping des bits internes pour le plugin "SYS" */
-       {  vars->sys_flipflop_5hz        = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_5HZ" );
-          vars->sys_flipflop_2hz        = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2HZ" );
-          vars->sys_flipflop_1sec       = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_1SEC" );
-          vars->sys_flipflop_2sec       = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2SEC" );
-          vars->sys_mqtt_connected      = Dls_data_BI_lookup   ( "SYS", "MQTT_CONNECTED" );
-          vars->sys_top_5hz             = Dls_data_MONO_lookup ( "SYS", "TOP_5HZ" );
-          vars->sys_top_2hz             = Dls_data_MONO_lookup ( "SYS", "TOP_2HZ" );
-          vars->sys_top_1sec            = Dls_data_MONO_lookup ( "SYS", "TOP_1SEC" );
-          vars->sys_top_5sec            = Dls_data_MONO_lookup ( "SYS", "TOP_5SEC" );
-          vars->sys_top_10sec           = Dls_data_MONO_lookup ( "SYS", "TOP_10SEC" );
-          vars->sys_top_1min            = Dls_data_MONO_lookup ( "SYS", "TOP_1MIN" );
-          vars->sys_bit_per_sec         = Dls_data_AI_lookup   ( "SYS", "DLS_BIT_PER_SEC" );
-          vars->sys_tour_per_sec        = Dls_data_AI_lookup   ( "SYS", "DLS_TOUR_PER_SEC" );
-          vars->sys_dls_wait            = Dls_data_AI_lookup   ( "SYS", "DLS_WAIT" );
-          vars->sys_maxrss              = Dls_data_AI_lookup   ( "SYS", "MAXRSS" );
-          vars->sys_log_per_min         = Dls_data_AI_lookup   ( "SYS", "LOG_PER_MIN" );
+       {  Agent_vars->sys_flipflop_5hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_5HZ" );
+          Agent_vars->sys_flipflop_2hz   = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2HZ" );
+          Agent_vars->sys_flipflop_1sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_1SEC" );
+          Agent_vars->sys_flipflop_2sec  = Dls_data_BI_lookup   ( "SYS", "FLIPFLOP_2SEC" );
+          Agent_vars->sys_mqtt_connected = Dls_data_BI_lookup   ( "SYS", "MQTT_CONNECTED" );
+          Agent_vars->sys_top_5hz        = Dls_data_MONO_lookup ( "SYS", "TOP_5HZ" );
+          Agent_vars->sys_top_2hz        = Dls_data_MONO_lookup ( "SYS", "TOP_2HZ" );
+          Agent_vars->sys_top_1sec       = Dls_data_MONO_lookup ( "SYS", "TOP_1SEC" );
+          Agent_vars->sys_top_5sec       = Dls_data_MONO_lookup ( "SYS", "TOP_5SEC" );
+          Agent_vars->sys_top_10sec      = Dls_data_MONO_lookup ( "SYS", "TOP_10SEC" );
+          Agent_vars->sys_top_1min       = Dls_data_MONO_lookup ( "SYS", "TOP_1MIN" );
+          Agent_vars->sys_bit_per_sec    = Dls_data_AI_lookup   ( "SYS", "DLS_BIT_PER_SEC" );
+          Agent_vars->sys_tour_per_sec   = Dls_data_AI_lookup   ( "SYS", "DLS_TOUR_PER_SEC" );
+          Agent_vars->sys_dls_wait       = Dls_data_AI_lookup   ( "SYS", "DLS_WAIT" );
+          Agent_vars->sys_maxrss         = Dls_data_AI_lookup   ( "SYS", "MAXRSS" );
+          Agent_vars->sys_log_per_min    = Dls_data_AI_lookup   ( "SYS", "LOG_PER_MIN" );
        }
 
-       plugin->vars.dls_osyn_acquit             = Dls_data_DI_lookup   ( plugin->tech_id, "OSYN_ACQUIT" );
-       plugin->vars.dls_comm                    = Dls_data_MONO_lookup ( plugin->tech_id, "COMM" );
-       plugin->vars.dls_memsa_ok                = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_OK" );
-       plugin->vars.dls_memsa_defaut            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT" );
-       plugin->vars.dls_memsa_defaut_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT_FIXE" );
-       plugin->vars.dls_memsa_alarme            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME" );
-       plugin->vars.dls_memsa_alarme_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME_FIXE" );
-       plugin->vars.dls_memssb_veille           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_VEILLE" );
-       plugin->vars.dls_memssb_alerte           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE" );
-       plugin->vars.dls_memssb_alerte_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE_FIXE" );
-       plugin->vars.dls_memssp_ok               = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_OK" );
-       plugin->vars.dls_memssp_derangement      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT" );
-       plugin->vars.dls_memssp_derangement_fixe = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT_FIXE" );
-       plugin->vars.dls_memssp_danger           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER" );
-       plugin->vars.dls_memssp_danger_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER_FIXE" );
-       plugin->vars.dls_msg_comm_ok             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_OK" );
-       plugin->vars.dls_msg_comm_hs             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_HS" );
+       plugin->dls_osyn_acquit             = Dls_data_DI_lookup   ( plugin->tech_id, "OSYN_ACQUIT" );
+       plugin->dls_comm                    = Dls_data_MONO_lookup ( plugin->tech_id, "COMM" );
+       plugin->dls_memsa_ok                = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_OK" );
+       plugin->dls_memsa_defaut            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT" );
+       plugin->dls_memsa_defaut_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_DEFAUT_FIXE" );
+       plugin->dls_memsa_alarme            = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME" );
+       plugin->dls_memsa_alarme_fixe       = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSA_ALARME_FIXE" );
+       plugin->dls_memssb_veille           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_VEILLE" );
+       plugin->dls_memssb_alerte           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE" );
+       plugin->dls_memssb_alerte_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSB_ALERTE_FIXE" );
+       plugin->dls_memssp_ok               = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_OK" );
+       plugin->dls_memssp_derangement      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT" );
+       plugin->dls_memssp_derangement_fixe = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DERANGEMENT_FIXE" );
+       plugin->dls_memssp_danger           = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER" );
+       plugin->dls_memssp_danger_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER_FIXE" );
+       plugin->dls_msg_comm_ok             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_OK" );
+       plugin->dls_msg_comm_hs             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_HS" );
 
        liste = g_slist_next(liste);
      }
-  g_rw_lock_reader_unlock ( &Agent->Dls_plugin_lock );
+  g_rw_lock_reader_unlock ( &Agent_Agent_vars->Dls_plugins_lock );
   }
 /******************************************************************************************************************************/
 /* Dls_Importer_un_plugin: Ajoute ou Recharge un plugin dans la liste des plugins                                             */
@@ -366,11 +361,11 @@
     g_list_free(Agent_tech_ids);
 
     g_rw_lock_writer_lock( &Agent->Dls_plugin_lock );                    /* On stoppe DLS pour éviter la compilation multiple */
-    vars->Dls_plugins = g_slist_append( vars->Dls_plugins, plugin );                                      /* Ajout à la liste */
+    Agent_vars->Dls_plugins = g_slist_append( Agent_vars->Dls_plugins, plugin );                          /* Ajout à la liste */
     g_rw_lock_writer_unlock( &Agent->Dls_plugin_lock );
 
     Dls_plugins_remap_all_alias();                                             /* Remap de tous les alias de tous les plugins */
-    if (plugin->init) plugin->init(&plugin->vars);                                     /* Appel de la fonction Init du plugin */
+    if (plugin->init) plugin->init(plugin);                                            /* Appel de la fonction Init du plugin */
 
     end:
     Json_unref(api_result);
@@ -390,7 +385,7 @@
 /******************************************************************************************************************************/
  void Dls_Importer_plugins ( void )
   { guint top = Agent->Top;
-    JsonNode *api_result = Http_Post_to_global_API ( "/run/dls/plugins", NULL );
+    JsonNode *api_result = Http_Post_to_global_API ( Agent, "/run/dls/plugins", NULL );
     if (api_result == NULL || Json_get_int ( api_result, "http_code" ) != 200)
      { Info( __func__, FACILITY_PLUGIN, NULL, LOG_ERR, "API Request for /run/dls/plugins failed. No plugin loaded." );
        Json_unref ( api_result );
@@ -409,14 +404,13 @@
 /* Sortie: Rien                                                                                                               */
 /******************************************************************************************************************************/
  void Dls_Decharger_un_plugin ( gchar *tech_id )
-  { struct ABLS_DLS_VARS *vars = Agent->vars;
-    struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id( tech_id );
+  { struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id( tech_id );
     if (!plugin) { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "'%s': Plugin not found.", tech_id ); return; }
 
-    g_rw_lock_writer_lock ( vars->Dls_plugins_lock );
-    vars->Dls_plugins = g_slist_remove ( vars->Dls_plugins, plugin );
-    g_rw_lock_writer_unlock ( vars->Dls_plugins_lock );
-    Dls_Plugin_remap_all_alias();                                              /* Remap de tous les alias de tous les plugins */
+    g_rw_lock_writer_lock ( &Agent_vars->Dls_plugins_lock );
+    Agent_vars->Dls_plugins = g_slist_remove ( Agent_vars->Dls_plugins, plugin );
+    g_rw_lock_writer_unlock ( &Agent_vars->Dls_plugins_lock );
+    Dls_plugins_remap_all_alias();                                             /* Remap de tous les alias de tous les plugins */
 
     Dls_Save_Data_to_API ( plugin );                                              /* Sauvegarde les valeurs des bits internes */
     if (plugin->handle && dlclose( plugin->handle ))
@@ -451,9 +445,8 @@
 /* Sortie: Rien                                                                                                               */
 /******************************************************************************************************************************/
  void Dls_Decharger_plugins ( void )
-  { struct ABLS_DLS_VARS *vars = Agent->vars;
-    while(vars->Dls_plugins)                                                                /* Liberation mémoire des modules */
-     { struct DLS_PLUGIN *plugin = vars->Dls_plugins->data;
+  { while(Agent_vars->Dls_plugins)                                                                /* Liberation mémoire des modules */
+     { struct DLS_PLUGIN *plugin = Agent_vars->Dls_plugins->data;
        Dls_Decharger_un_plugin ( plugin->tech_id );
      }
   }
@@ -473,14 +466,9 @@
        return;
      }
 
-    if(actif)
-     { Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' debug started ('%s')", plugin->tech_id, plugin->name );
-       plugin->debug_time = Partage->top + 1200;                                                   /* Debug pendant 2 minutes */
-     }
-    else
-     { Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' debug stopped ('%s')", plugin->tech_id, plugin->name );
-       plugin->debug_time = 0;
-     }
+    plugin->debug = actif;
+    Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' debug %s ('%s')",
+          plugin->tech_id, (actif ? "started" : "stopped"), plugin->name );
   }
 /******************************************************************************************************************************/
 /* Activer_plugin_by_id: Active ou non un plugin by id                                                                        */
@@ -500,6 +488,6 @@
 
     Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' acquitté ('%s')", plugin->tech_id, plugin->shortname );
     struct DLS_DI *bit = Dls_data_DI_lookup ( plugin->tech_id, "OSYN_ACQUIT" );
-    Dls_data_DI_set_pulse ( &plugin->vars, bit );
+    Dls_data_DI_set_pulse ( plugin, bit );
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

@@ -28,9 +28,6 @@
  #include <stdarg.h>
 
  #include "map.h"
- #include "dls.h"
-
- extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
 
  static JsonNode *Tree_root = NULL;                                                           /* Racine de l'arbre de mapping */
  static GTree    *Tree_to_local = NULL;                                                    /* Arbre de mapping agent -> local */

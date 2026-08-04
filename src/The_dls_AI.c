@@ -53,12 +53,12 @@
           bit->tech_id, bit->acronyme, bit->valeur, bit->unite, bit->libelle, bit->archivage );
   }
 /******************************************************************************************************************************/
-/* Dls_data_AI_lookup : Recherche un CH dans les plugins DLS                                                                  */
+/* Dls_data_AI_lookup : Recherche un AI dans les plugins DLS                                                                  */
 /* Entrée : l'acronyme, le tech_id et le pointeur de raccourci                                                                */
 /******************************************************************************************************************************/
  struct DLS_AI *Dls_data_AI_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -172,12 +172,12 @@
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_AI_export_to_API ( struct ABLS_AGENT *agent, struct DLS_AI *bit )
+ void Dls_AI_export_to_API ( struct DLS_AI *bit )
   { JsonNode *element = Json_create ();
     if (element && bit)
      { Json_add_double ( element, "valeur",   bit->valeur );
        Json_add_bool   ( element, "in_range", bit->in_range );
-       Agent_send_mqtt_api_message ( agent, element, "DLS_REPORT/AI/%s/%s", bit->tech_id, bit->acronyme );
+       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/AI/%s/%s", bit->tech_id, bit->acronyme );
        Json_unref      ( element );
      }
   }

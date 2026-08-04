@@ -25,16 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
- #include <locale.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_CI_create_by_array : Création d'un CI pour le plugin                                                              */
@@ -86,7 +77,7 @@
 /* Entrée: le tech_id, l'acronyme, le pointeur d'accélération et la valeur entière                                            */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_CI_set ( struct DLS_TO_PLUGIN *vars, struct DLS_CI *bit, gboolean etat )
+ void Dls_data_CI_set ( struct DLS_PLUGIN *plugin, struct DLS_CI *bit, gboolean etat )
   { if (!bit) return;
     if (etat)
      { if ( bit->etat == FALSE )                                                                          /* Passage en actif */
@@ -107,7 +98,7 @@
 /* Entrée: le DLS_VARS et le compteur                                                                                         */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_CI_set_pulse ( struct DLS_TO_PLUGIN *vars, struct DLS_CI *bit )
+ void Dls_data_CI_set_pulse ( struct DLS_PLUGIN *plugin, struct DLS_CI *bit )
   { if (!bit) return;
     Dls_data_CI_set ( vars, bit, TRUE );
     Dls_data_CI_set ( vars, bit, FALSE );
@@ -117,7 +108,7 @@
 /* Entrée: le DLS_VARS et le compteur                                                                                         */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_CI_reset ( struct DLS_TO_PLUGIN *vars, struct DLS_CI *bit )
+ void Dls_data_CI_reset ( struct DLS_PLUGIN *plugin, struct DLS_CI *bit )
   { if (!bit) return;
     if (bit->valeur!=0)
      { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                           /* Archivage si besoin */

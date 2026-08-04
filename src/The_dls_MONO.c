@@ -25,15 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_MONO_create_by_array : Création d'un MONO pour le plugin                                                          */
@@ -82,7 +74,7 @@
 /* Dls_data_MONO_set: Positionne un monostable                                                                                */
 /* Sortie : TRUE sur le boolean est UP                                                                                        */
 /******************************************************************************************************************************/
- void Dls_data_MONO_set ( struct DLS_TO_PLUGIN *vars, struct DLS_MONO *mono, gboolean valeur )
+ void Dls_data_MONO_set ( struct DLS_PLUGIN *plugin, struct DLS_MONO *mono, gboolean valeur )
   { if(!mono) return;
     if (mono->etat == TRUE && valeur == FALSE)                                                            /* Front descendant */
      { mono->etat = FALSE;

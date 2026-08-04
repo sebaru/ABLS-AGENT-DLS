@@ -30,7 +30,7 @@
 
  #include <glib.h>
 
- extern void Dls_Start_top_horaire ( void );
+ extern void Dls_Check_top_horaire ( void );
  extern void Dls_Stop_top_horaire ( void );
 
  #endif

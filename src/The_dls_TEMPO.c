@@ -25,15 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_TEMPO_create_by_array : Création d'un TEMPO pour le plugin                                                        */
@@ -82,7 +74,7 @@
 /* Entrée: la structure tempo et son etat                                                                                     */
 /* Sortie: Neant                                                                                                              */
 /******************************************************************************************************************************/
- static void ST_local( struct DLS_TO_PLUGIN *vars, struct DLS_TEMPO *tempo, int etat )
+ static void ST_local( struct DLS_PLUGIN *plugin, struct DLS_TEMPO *tempo, int etat )
   { static guint seed;
     if (tempo->status == DLS_TEMPO_NOT_COUNTING && etat == 1)
      { tempo->status = DLS_TEMPO_WAIT_FOR_DELAI_ON;
@@ -186,7 +178,7 @@
 /* Dls_data_TEMPO_set : Gestion du positionnement des tempos DLS en mode dynamique                                            */
 /* Entrée : l'acronyme, le owner dls, un pointeur de raccourci, et la valeur on ou off de la tempo                            */
 /******************************************************************************************************************************/
- void Dls_data_TEMPO_set ( struct DLS_TO_PLUGIN *vars, struct DLS_TEMPO *tempo, gboolean etat,
+ void Dls_data_TEMPO_set ( struct DLS_PLUGIN *plugin, struct DLS_TEMPO *tempo, gboolean etat,
                            gint delai_on, gint min_on, gint max_on, gint delai_off, gint random)
   { if (!tempo) return;
     if (tempo->init == FALSE)

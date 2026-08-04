@@ -119,7 +119,7 @@
 /* Dls_data_DI_set_pulse: Envoi une impulsion sur une DI                                                                      */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_DI_set_pulse ( struct DLS_TO_PLUGIN *vars, struct DLS_DI *bit )
+ void Dls_data_DI_set_pulse ( struct DLS_PLUGIN *plugin, struct DLS_DI *bit )
   { if (!bit) return;
     Partage->Set_Dls_Data = g_slist_append ( Partage->Set_Dls_Data, bit );
     Info( __func__, "dls", bit->tech_id, LOG_NOTICE,

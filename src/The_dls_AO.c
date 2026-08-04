@@ -25,15 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_AO_create_by_array : Création d'un AO pour le plugin                                                              */
@@ -65,7 +57,7 @@
 /******************************************************************************************************************************/
  struct DLS_AO *Dls_data_AO_lookup ( gchar *tech_id, gchar *acronyme )
   { if (!(tech_id && acronyme)) return(NULL);
-    GSList *plugins = Partage->Dls_plugins;
+    GSList *plugins = Agent_vars->Dls_plugins;
     while (plugins)
      { struct DLS_PLUGIN *plugin = plugins->data;
        if (!strcasecmp( plugin->tech_id, tech_id ))
@@ -92,22 +84,22 @@
 /* Met à jour la sortie analogique à partir de sa valeur avant mise a l'echelle                                               */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_AO_set ( struct DLS_TO_PLUGIN *vars, struct DLS_AO *bit, gdouble valeur )
+ void Dls_data_AO_set ( struct DLS_PLUGIN *plugin, struct DLS_AO *bit, gdouble valeur )
   { if (!bit) return;
     if (bit->valeur == valeur) return;
     bit->valeur = valeur;                                                           /* Archive au mieux toutes les 5 secondes */
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_AO '%s:%s'=%f %s",
-              (vars ? vars->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
+              plugin->num_ligne, bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
     JsonNode *RootNode = Json_create ();
     if (RootNode)
      { Dls_AO_to_json ( RootNode, bit );
-       g_rw_lock_writer_lock( &Partage->Liste_AO_synchro );                           /* Ajout dans la liste des AO a traiter */
-       Partage->Liste_AO = g_slist_append( Partage->Liste_AO, RootNode );
-       g_rw_lock_writer_unlock( &Partage->Liste_AO_synchro );
+       g_rw_lock_writer_lock( &Agent_vars->Liste_AO_synchro );                           /* Ajout dans la liste des AO a traiter */
+       Agent_vars->Liste_AO = g_slist_append( Agent_vars->Liste_AO, RootNode );
+       g_rw_lock_writer_unlock( &Agent_vars->Liste_AO_synchro );
      }
     else Info( __func__, "dls", bit->tech_id, LOG_ERR, "JSon RootNode creation failed" );
-    Partage->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_per_sec++;
     Dls_AO_export_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/

@@ -25,16 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
- #include <locale.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_REGISTRE_create_by_array : Création d'un REGISTRE pour le plugin                                                  */

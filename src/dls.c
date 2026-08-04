@@ -40,13 +40,13 @@
   { setenv ( "ABLS_AGENT_TECH_ID", "DLS", 1 );
     setenv ( "ABLS_TPS", "100", 1 );                                                                 /* 100 tour par secondes */
     Agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct ABLS_DLS_VARS), argc, argv );
-    struct ABLS_DLS_VARS *vars = (struct ABLS_DLS_VARS *)Agent->vars;
+    Agent_vars = (struct ABLS_DLS_VARS *) Agent->vars;
 
-    g_rw_lock_init ( &vars->Dls_plugins_lock );
-    g_rw_lock_init ( &vars->Liste_DO_synchro );
-    g_rw_lock_init ( &vars->Liste_AO_synchro );
-    g_rw_lock_init ( &vars->Liste_visuel_synchro );
-    g_rw_lock_init ( &vars->Liste_msg_synchro );
+    g_rw_lock_init ( &Agent_vars->Dls_plugins_lock );
+    g_rw_lock_init ( &Agent_vars->Liste_DO_synchro );
+    g_rw_lock_init ( &Agent_vars->Liste_AO_synchro );
+    g_rw_lock_init ( &Agent_vars->Liste_visuel_synchro );
+    g_rw_lock_init ( &Agent_vars->Liste_msg_synchro );
 
     Agent_is_ready ( Agent );                                                                             /* L'agent est pret */
 
@@ -57,8 +57,12 @@
     Dls_Importer_plugins();
     Dls_Load_horloge_ticks();
 
-    guint next_top_5hz   = next_top_2hz  = Agent->Top;                                                   /* Init des next top */
-    guint next_top_1sec  = next_top_2sec = next_top_5sec = Agent->Top + 10;
+    guint next_top_2hz   = Agent->Top;                                                                   /* Init des next top */
+    guint next_top_5hz   = Agent->Top;                                                                   /* Init des next top */
+    guint next_top_1sec  = Agent->Top + 10;
+    guint next_top_2sec  = Agent->Top + 20;
+    guint next_top_5sec  = Agent->Top + 50;
+    guint next_top_10sec = Agent->Top + 100;
     guint next_top_1min  = Agent->Top + 600;
     guint next_top_10min = Agent->Top + 6000;
 
@@ -66,91 +70,74 @@
     while(Agent->Agent_run == AGENT_IS_RUNNING)
      { Agent_loop ( Agent );
 /*----------------------------------------------------------- Loop D.L.S -----------------------------------------------------*/
-       Dls_Start_top_horaire();
-       g_rw_lock_reader_lock ( &vars->Dls_plugins_lock );
+       Dls_Check_top_horaire ();                                           /* Mise à jour des variables de gestion de l'heure */
 /******************************************************************************************************************************/
-       if (Partage->top>=next_top_5hz)                                                             /* Toutes les 1/5 secondes */
+       if (Agent->Top>=next_top_5hz)                                                               /* Toutes les 1/5 secondes */
         { next_top_5hz = Agent->Top + 2;
-          Dls_data_MONO_set ( NULL, vars->sys_top_5hz, TRUE );
-          Dls_data_BI_set   ( NULL, vars->sys_flipflop_5hz,
-                             !Dls_data_BI_get ( vars->sys_flipflop_5hz) );
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5hz, TRUE );
+          Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_5hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_5hz) );
         }
 /******************************************************************************************************************************/
-       if (Agent->Top>=next_top_2hz)                                                             /* Toutes les 1/2 secondes */
+       if (Agent->Top>=next_top_2hz)                                                               /* Toutes les 1/2 secondes */
          {next_top_2hz = Agent->Top + 5;
-          Dls_data_MONO_set ( NULL, vars->sys_top_2hz, TRUE );
-          Dls_data_BI_set   ( NULL, vars->sys_flipflop_2hz,
-                             !Dls_data_BI_get ( vars->sys_flipflop_2hz) );
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz, TRUE );
+          Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_2hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2hz) );
         }
 /******************************************************************************************************************************/
-       if (Agent->Top>=next_top_1sec)                                                                /* Toutes les secondes */
+       if (Agent->Top>=next_top_1sec)                                                                  /* Toutes les secondes */
         { next_top_1sec = Agent->Top + 10;
-          Dls_data_MONO_set ( NULL, vars->sys_top_1sec, TRUE );
-          Dls_data_BI_set   ( NULL, vars->sys_flipflop_1sec,
-                             !Dls_data_BI_get ( vars->sys_flipflop_1sec) );
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1sec, TRUE );
+          Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_1sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_1sec) );
 
-          vars->audit_bit_interne_per_sec_hold += vars->audit_bit_interne_per_sec;
-          vars->audit_bit_interne_per_sec_hold = vars->audit_bit_interne_per_sec_hold >> 1;
-          vars->audit_bit_interne_per_sec = 0;                                                                  /* historique */
-          Dls_data_AI_set ( vars->sys_bit_per_sec, (gdouble)vars->audit_bit_interne_per_sec_hold, TRUE );
+          Agent_vars->audit_bit_interne_per_sec_hold += Agent_vars->audit_bit_interne_per_sec;
+          Agent_vars->audit_bit_interne_per_sec_hold = Agent_vars->audit_bit_interne_per_sec_hold >> 1;
+          Agent_vars->audit_bit_interne_per_sec = 0;                                                                  /* historique */
+          Dls_data_AI_set ( Agent_vars->sys_bit_per_sec, (gdouble)Agent_vars->audit_bit_interne_per_sec_hold, TRUE );
         }
 /******************************************************************************************************************************/
-       if (Partage->top>=next_top_2sec)                                                              /* Toutes les 2 secondes */
+       if (Agent->Top>=next_top_2sec)                                                                /* Toutes les 2 secondes */
         { next_top_2sec = Agent->Top+20;
-          Dls_data_BI_set ( NULL, vars->sys_flipflop_2sec,
-                           !Dls_data_BI_get ( vars->sys_flipflop_2sec) );
+          Dls_data_BI_set ( NULL, Agent_vars->sys_flipflop_2sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2sec) );
         }
 /******************************************************************************************************************************/
        if (Agent->Top>=next_top_5sec)                                                                /* Toutes les 5 secondes */
         { next_top_5sec = Agent->Top + 50;
-          Dls_data_MONO_set ( NULL, vars->sys_top_5sec, TRUE );
-          Dls_foreach_plugins ( NULL, Dls_run_archivage );                        /* Archivage au mieux toutes les 5 secondes */
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5sec, TRUE );
         }
 /******************************************************************************************************************************/
        if (Agent->Top>=next_top_10sec)                                                              /* Toutes les 10 secondes */
         { next_top_10sec = Agent->Top + 100;
-          Dls_data_MONO_set ( NULL, vars->sys_top_10sec, TRUE );
-          Dls_data_BI_set ( NULL, vars->sys_mqtt_connected, vars->MQTT_connected );
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
+          Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Mqtt_is_connected ( Agent->Mqtt_local_session ) );
         }
 /******************************************************************************************************************************/
        if (Agent->Top>=next_top_1min)                                                                   /* Toutes les minutes */
         { next_top_1min = Agent->Top + 600;
-          Dls_data_MONO_set ( NULL, vars->sys_top_1min, TRUE );
-          Dls_Start_top_horaire ();                                        /* Mise à jour des variables de gestion de l'heure */
+          Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min, TRUE );
           Dls_data_activer_horloge();
+          Dls_foreach_plugins ( Dls_run_archivage );                                 /* Archivage au mieux toutes les minutes */
         }
 /******************************************************************************************************************************/
-       if (Agent->Top>=next_top_10min)                                                             /* Toutes les 10 minutes */
+       if (Agent->Top>=next_top_10min)                                                               /* Toutes les 10 minutes */
         { next_top_10min = Agent->Top + 6000;
         }
 
-       Dls_set_edge();                                                                    /* Mise à zero des bits de egde up/down */
-       Dls_set_cde_exterieure();                                           /* Mise à un des bits de commande exterieure (furtifs) */
-
-       Partage->top_cdg_plugin_dls = 0;                                                         /* On reset le cdg plugin DLS */
-
-       Dls_foreach_plugins ( NULL, Dls_run_plugin );                                                  /* Run all plugin D.L.S */
-
-       Partage->Top_check_horaire = FALSE;                        /* Controle horaire effectué un fois par minute max */
-       Dls_reset_edge();                                                                   /* Mise à zero des bit de egde up/down */
-       Dls_reset_cde_exterieure();                                        /* Mise à zero des bit de commande exterieure (furtifs) */
-
-       Dls_data_HORLOGE_clear();
-       Dls_data_MONO_set ( NULL, Partage->sys_top_5hz,   FALSE );                     /* RaZ des Mono du plugin 'SYS' */
-       Dls_data_MONO_set ( NULL, Partage->sys_top_2hz,   FALSE );
-       Dls_data_MONO_set ( NULL, Partage->sys_top_1sec,  FALSE );
-       Dls_data_MONO_set ( NULL, Partage->sys_top_5sec,  FALSE );
-       Dls_data_MONO_set ( NULL, Partage->sys_top_10sec, FALSE );
-       Dls_data_MONO_set ( NULL, Partage->sys_top_1min,  FALSE );
-
-
-       Dls_set_edge();
-       Dls_set_cde_exterieure();
-       Dls_foreach_plugins ( Agent, Dls_run_plugin );
-       Dls_reset_edge();
-       Dls_reset_cde_exterieure();
+       Dls_set_edge();                                                                /* Mise à zero des bits de egde up/down */
+       Dls_set_cde_exterieure();                                       /* Mise à un des bits de commande exterieure (furtifs) */
+       Dls_foreach_plugins ( Dls_run_plugin );                                                        /* Run all plugin D.L.S */
+       Dls_reset_edge();                                                               /* Mise à zero des bit de egde up/down */
+       Dls_reset_cde_exterieure();                                    /* Mise à zero des bit de commande exterieure (furtifs) */
 
        Dls_Stop_top_horaire();
+
+       Dls_data_HORLOGE_clear();
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5hz,   FALSE );                          /* RaZ des Mono du plugin 'SYS' */
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz,   FALSE );
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1sec,  FALSE );
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5sec,  FALSE );
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, FALSE );
+       Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min,  FALSE );
+
 /*----------------------------------------------------------- Ecoute du Master -----------------------------------------------*/
        JsonNode *mqtt_local_message;
        while ( (mqtt_local_message = Agent_get_mqtt_local_message ( Agent ) ) != NULL )
@@ -189,11 +176,11 @@
 
     Dls_Decharger_plugins();
 
-    g_rw_lock_clear ( &vars->Dls_plugins_lock );
-    g_rw_lock_clear ( &vars->Liste_DO_synchro );
-    g_rw_lock_clear ( &vars->Liste_AO_synchro );
-    g_rw_lock_clear ( &vars->Liste_visuel_synchro );
-    g_rw_lock_clear ( &vars->Liste_msg_synchro );
+    g_rw_lock_clear ( &gent_vars->Dls_plugins_lock );
+    g_rw_lock_clear ( &Agent_vars->Liste_DO_synchro );
+    g_rw_lock_clear ( &Agent_vars->Liste_AO_synchro );
+    g_rw_lock_clear ( &Agent_vars->Liste_visuel_synchro );
+    g_rw_lock_clear ( &Agent_vars->Liste_msg_synchro );
 
     MAP_End();
 

@@ -25,15 +25,7 @@
  * Boston, MA  02110-1301  USA
  */
 
- #include <glib.h>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <string.h>
-
- #include "watchdogd.h"
+ #include "dls.h"
 
 /******************************************************************************************************************************/
 /* Dls_data_CH_create_by_array : Création d'un CH pour le plugin                                                              */
@@ -93,7 +85,7 @@
 /* Entrée: le tech_id, l'acronyme, le pointeur d'accélération et la valeur entière                                            */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_CH_set ( struct DLS_TO_PLUGIN *vars, struct DLS_CH *bit, gboolean etat )
+ void Dls_data_CH_set ( struct DLS_PLUGIN *plugin, struct DLS_CH *bit, gboolean etat )
   { if (!bit) return;
 
     if (etat)
@@ -132,7 +124,7 @@
 /* Entrée: les DLS_VARS, le bit                                                                                               */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_data_CH_reset ( struct DLS_TO_PLUGIN *vars, struct DLS_CH *bit )
+ void Dls_data_CH_reset ( struct DLS_PLUGIN *plugin, struct DLS_CH *bit )
   { if (!bit) return;
     if (bit->valeur > 0)
      { MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->valeur );                           /* Archivage si besoin */
