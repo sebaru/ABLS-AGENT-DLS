@@ -94,7 +94,7 @@
          g_str_has_prefix ( mono->acronyme, "MEMSSB_ALERTE" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSP_DERANGEMENT" ) ||
          g_str_has_prefix ( mono->acronyme, "MEMSSP_DANGER" ) )
-     { Dls_MONO_export_to_API ( mono ); }
+     { Dls_MONO_report_to_API ( mono ); }
     Agent_vars->audit_bit_interne_per_sec++;
   }
 /******************************************************************************************************************************/
@@ -142,11 +142,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_MONO_export_to_API : Formate un bit au format JSON                                                                     */
+/* Dls_MONO_report_to_API : Formate un bit au format JSON                                                                     */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_MONO_export_to_API ( struct DLS_MONO *bit )
+ void Dls_MONO_report_to_API ( struct DLS_MONO *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool   ( element, "etat",     bit->etat );

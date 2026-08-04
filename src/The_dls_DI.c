@@ -112,7 +112,7 @@
         Agent_vars->audit_bit_interne_per_sec++;
        MQTT_Send_archive_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
         bit->last_arch = Agent->Top;
-       Dls_DI_export_to_API ( bit );                                                                         /* envoi a l'API */
+      Dls_DI_report_to_API ( bit );                                                                         /* envoi a l'API */
      }
   }
 /******************************************************************************************************************************/
@@ -186,11 +186,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_DI_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_DI_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_DI_export_to_API ( struct DLS_DI *bit )
+ void Dls_DI_report_to_API ( struct DLS_DI *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );

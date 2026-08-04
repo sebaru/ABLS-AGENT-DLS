@@ -95,7 +95,7 @@
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is now counting",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
-          if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
+          if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
         }
        else                                                                                                       /* Comptage */
         { int new_top, delta;
@@ -104,7 +104,7 @@
           if (delta >= 10)                                                              /* On compte +1 toutes les secondes ! */
            { bit->valeur += delta;
              bit->old_top = new_top;
-             if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                /* Si debug, envoi a l'API */
+             if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                /* Si debug, envoi a l'API */
              Agent_vars->audit_bit_interne_per_sec++;
            }
         }
@@ -115,7 +115,7 @@
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is not counting anymore",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
-          if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                   /* Si debug, envoi a l'API */
+          if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
         }
      }
   }
@@ -133,15 +133,15 @@ c      Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                 (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
        bit->valeur = 0;
        bit->etat   = FALSE;
-       if (plugin && plugin->debug) Dls_CH_export_to_API ( bit );                                      /* Si debug, envoi a l'API */
+       if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                      /* Si debug, envoi a l'API */
      }
   }
 /******************************************************************************************************************************/
-/* Dls_CH_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_CH_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le bit                                                                                                            */
 /* Sortie : le JSON                                                                                                           */
 /******************************************************************************************************************************/
- void Dls_CH_export_to_API ( struct DLS_CH *bit )
+ void Dls_CH_report_to_API ( struct DLS_CH *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_int  ( element, "valeur", bit->valeur );

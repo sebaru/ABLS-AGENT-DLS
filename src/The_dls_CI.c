@@ -87,7 +87,7 @@
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_CI '%s:%s'=%d",
                     (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
-          if (plugin && plugin->debug) Dls_CI_export_to_API ( bit );                                   /* Si debug, envoi à l'API */
+          if (plugin && plugin->debug) Dls_CI_report_to_API ( bit );                                   /* Si debug, envoi à l'API */
         }
      }
     else
@@ -127,11 +127,11 @@
     return( cpt_imp->valeur );
   }
 /******************************************************************************************************************************/
-/* Dls_CI_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_CI_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le bit                                                                                                            */
 /* Sortie : le JSON                                                                                                           */
 /******************************************************************************************************************************/
- void Dls_CI_export_to_API ( struct DLS_CI *bit )
+ void Dls_CI_report_to_API ( struct DLS_CI *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_int  ( element, "valeur", bit->valeur );

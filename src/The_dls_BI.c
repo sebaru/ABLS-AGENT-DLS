@@ -85,7 +85,7 @@
         { Agent_vars->Set_Dls_BI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_up, bi ); }
        else
         { Agent_vars->Set_Dls_BI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_down, bi ); }
-       if (plugin && plugin->debug) Dls_BI_export_to_API ( bi );                                       /* Si debug, envoi a l'API */
+       if (plugin && plugin->debug) Dls_BI_report_to_API ( bi );                                       /* Si debug, envoi a l'API */
        Agent_vars->audit_bit_interne_per_sec++;
      }
   }
@@ -114,11 +114,11 @@
     return( bi->edge_down );
   }
 /******************************************************************************************************************************/
-/* Dls_BI_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_BI_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le bit                                                                                                            */
 /* Sortie : le JSON                                                                                                           */
 /******************************************************************************************************************************/
- void Dls_BI_export_to_API ( struct DLS_BI *bit )
+ void Dls_BI_report_to_API ( struct DLS_BI *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );

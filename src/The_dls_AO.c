@@ -100,7 +100,7 @@
      }
     else Info( __func__, "dls", bit->tech_id, LOG_ERR, "JSon RootNode creation failed" );
     Agent_vars->audit_bit_interne_per_sec++;
-    Dls_AO_export_to_API ( bit );                                                                            /* envoi a l'API */
+    Dls_AO_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/
 /* Dls_AO_to_json: Convertir un AO en JSON                                                                                    */
@@ -132,11 +132,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_AO_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_AO_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_AO_export_to_API ( struct DLS_AO *bit )
+ void Dls_AO_report_to_API ( struct DLS_AO *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_double ( element, "valeur", bit->valeur );

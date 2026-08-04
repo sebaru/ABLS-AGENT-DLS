@@ -93,7 +93,7 @@
     Info( __func__, "dls", dout->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_DO '%s:%s'=%d ",
               (plugin ? plugin->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
-    Dls_DO_export_to_API ( dout );                                                                           /* envoi a l'API */
+    Dls_DO_report_to_API ( dout );                                                                           /* envoi a l'API */
     MQTT_Send_archive_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                         /* Archivage si besoin */
     dout->last_arch = Agent->Top;
 
@@ -162,11 +162,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_DO_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_DO_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_DO_export_to_API ( struct DLS_DO *bit )
+ void Dls_DO_report_to_API ( struct DLS_DO *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );

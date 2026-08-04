@@ -80,7 +80,7 @@
   { if (!registre) return;
     if (valeur != registre->valeur)
      { registre->valeur = valeur;
-       if (plugin && plugin->debug) Dls_REGISTRE_export_to_API ( registre );
+      if (plugin && plugin->debug) Dls_REGISTRE_report_to_API ( registre );
       Info( __func__, "dls", registre->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_REGISTRE '%s:%s'=%f",
                  (plugin ? plugin->num_ligne : -1), registre->tech_id, registre->acronyme, registre->valeur );
@@ -114,11 +114,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_REGISTRE_export_to_API : Formate un bit au format JSON                                                                 */
+/* Dls_REGISTRE_report_to_API : Formate un bit au format JSON                                                                 */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_REGISTRE_export_to_API ( struct DLS_REGISTRE *bit )
+ void Dls_REGISTRE_report_to_API ( struct DLS_REGISTRE *bit )
   { JsonNode *element = Json_create ();
     if (element)
      { Json_add_double ( element, "valeur", bit->valeur );

@@ -99,7 +99,7 @@
     bit->in_range = in_range;
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "Changing DLS_AI '%s:%s'=%f %s", bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
-    Dls_AI_export_to_API ( bit );                                                                            /* envoi a l'API */
+    Dls_AI_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/
 /* Dls_data_AI_set_from_thread_ai: Positionne une AI dans DLS depuis une AI 'thread'                                          */
@@ -168,11 +168,11 @@
      }
   }
 /******************************************************************************************************************************/
-/* Dls_AI_export_to_API : Formate un bit au format JSON                                                                       */
+/* Dls_AI_report_to_API : Formate un bit au format JSON                                                                       */
 /* Entrées: le JsonNode et le bit                                                                                             */
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
- void Dls_AI_export_to_API ( struct DLS_AI *bit )
+ void Dls_AI_report_to_API ( struct DLS_AI *bit )
   { JsonNode *element = Json_create ();
     if (element && bit)
      { Json_add_double ( element, "valeur",   bit->valeur );
