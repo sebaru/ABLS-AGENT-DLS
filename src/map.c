@@ -88,8 +88,8 @@
 /* Sortie: néant                                                                                                              */
 /******************************************************************************************************************************/
  void MAP_Init ( void )
-  { Tree_to_local = NULL;
-    Tree_to_agent = NULL;
+  { Tree_to_agent = g_tree_new ( (GCompareDataFunc)MAP_Comparer_clef_local, NULL );
+    Tree_to_local = g_tree_new ( (GCompareDataFunc)MAP_Comparer_clef_agent, NULL );
     g_rw_lock_init ( &Tree_to_local_lock );
     g_rw_lock_init ( &Tree_to_agent_lock );
   }
@@ -101,12 +101,12 @@
  static void MAP_Clear( void )
   { g_rw_lock_writer_lock ( &Tree_to_agent_lock );
     g_tree_destroy ( Tree_to_agent );
-    Tree_to_agent = NULL;
+    Tree_to_agent = g_tree_new ( (GCompareDataFunc)MAP_Comparer_clef_local, NULL );
     g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
 
     g_rw_lock_writer_lock ( &Tree_to_local_lock );
     g_tree_destroy ( Tree_to_local );
-    Tree_to_local = NULL;
+    Tree_to_local = g_tree_new ( (GCompareDataFunc)MAP_Comparer_clef_agent, NULL );
     g_rw_lock_writer_unlock ( &Tree_to_local_lock );
 
     Json_unref ( Tree_root );
