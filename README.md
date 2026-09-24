@@ -1,6 +1,6 @@
 # abls-agent-dls
 
-Runtime agent for the Abls-Habitat Distributed Logic System (DLS).
+Runtime agent for the Abls-Habitat (DLS).
 
 ## Current implementation status
 
@@ -62,14 +62,3 @@ The release flow:
 - merges `trunk` into `main`
 - builds RPM + DEB packages
 - creates packages locally; publication is handled separately by ABLS-PKGS
-
-## Container build
-
-```sh
-podman build -t abls-agent-dls:dev \
-  --build-arg ABLS_LIBS_DEVEL_RPM_URL=<url> \
-  --build-arg ABLS_AGENT_LIBS_DEVEL_RPM_URL=<url> \
-  --build-arg ABLS_LIBS_RPM_URL=<url> \
-  --build-arg ABLS_AGENT_LIBS_RPM_URL=<url> \
-  -f Containerfile .
-```
