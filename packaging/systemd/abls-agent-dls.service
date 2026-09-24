@@ -1,0 +1,17 @@
+[Unit]
+Description=ABLS Agent DLS
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/abls-agent-dls
+DynamicUser=yes
+SupplementaryGroups=abls
+StateDirectory=abls-agent-dls
+WorkingDirectory=%S/abls-agent-dls
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
