@@ -145,7 +145,7 @@
   { gchar source_file[128], target_file[128];
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Compilation of '%s' started", tech_id );
-    gint top = Agent->Top;
+    gint top = Agent_get_top ( Agent );
     g_snprintf( source_file, sizeof(source_file), "Dls/%s.c", tech_id );
     g_snprintf( target_file, sizeof(target_file),  "Dls/libdls%s.so", tech_id );
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "Starting GCC." );
@@ -172,7 +172,7 @@
     gint gcc_return_code = WEXITSTATUS(wcode);
     if (gcc_return_code == 1) unlink(target_file);
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "gcc pid %d is down with return code %d", pidgcc, gcc_return_code );
-    Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Agent->Top - top)/10.0 );
+    Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Agent_get_top ( Agent ) - top)/10.0 );
     return(TRUE);
   }
 /******************************************************************************************************************************/

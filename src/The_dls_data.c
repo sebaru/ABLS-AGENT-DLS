@@ -35,7 +35,7 @@
  void Dls_Save_Data_to_API ( struct DLS_PLUGIN *plugin )
   { if (!plugin)
      { Info( __func__, "dls", NULL, LOG_ERR, "Error when saving dls_data: plugin is NULL." ); return; }
-    gint top = Agent->Top;
+    gint top = Agent_get_top ( Agent );
 
     JsonNode *RootNode = Json_create();
     if (!RootNode)
@@ -97,7 +97,7 @@
                  "'%s': Save %d CI to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CI" ) );
        Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                  "'%s': Save %d CH to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CH" ) );
-       Info( __func__, "dls", plugin->tech_id, LOG_NOTICE, "Saved '%s' DLS_DATA in %06.1fs", plugin->tech_id, (Agent->Top-top)/10.0 );
+       Info( __func__, "dls", plugin->tech_id, LOG_NOTICE, "Saved '%s' DLS_DATA in %06.1fs", plugin->tech_id, (Agent_get_top ( Agent )-top)/10.0 );
      }
     else
      { Info( __func__, "dls", plugin->tech_id, LOG_ERR, "Error when saving '%s' dls_data to API.", plugin->tech_id ); }

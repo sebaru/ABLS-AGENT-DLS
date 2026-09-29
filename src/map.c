@@ -172,7 +172,7 @@ void MAP_Remap( void )
  { MAP_Clear();
    Tree_root = Http_Post_to_global_API ( Agent, "/run/mapping/list", NULL );
    if (Tree_root && Json_get_int ( Tree_root, "http_code" ) == 200)
-    { Info ( __func__, Agent->agent_classe, Agent->agent_tech_id, LOG_NOTICE,
+    { Info ( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE,
              "Remapping with %d maps", Json_get_int ( Tree_root, "nbr_mappings" ) );
       GList *results = json_array_get_elements ( Json_get_array ( Tree_root, "mappings" ) );
       GList *result = results;

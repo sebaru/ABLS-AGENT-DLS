@@ -91,7 +91,7 @@
     if (etat)
      { if ( ! bit->etat )                                                                            /* Démarrage du comptage */
         { bit->etat    = TRUE;
-          bit->old_top = Agent->Top;
+          bit->old_top = Agent_get_top ( Agent );
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is now counting",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
@@ -99,7 +99,7 @@
         }
        else                                                                                                       /* Comptage */
         { int new_top, delta;
-          new_top = Agent->Top;
+          new_top = Agent_get_top ( Agent );
           delta   = new_top - bit->old_top;
           if (delta >= 10)                                                              /* On compte +1 toutes les secondes ! */
            { bit->valeur += delta;

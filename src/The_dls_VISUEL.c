@@ -257,12 +257,12 @@
     GSList *liste = plugin->Dls_data_VISUEL;
     while ( liste )
      { struct DLS_VISUEL *visu = liste->data;
-       if (visu->changed && (Agent->Top >= visu->next_send))
+       if (visu->changed && (Agent_get_top ( Agent ) >= visu->next_send))
         { g_rw_lock_writer_lock( &Agent_vars->Liste_visuel_synchro );                      /* Ajout dans la liste de i a traiter */
           Agent_vars->Liste_visuel = g_slist_append( Agent_vars->Liste_visuel, visu );
           g_rw_lock_writer_unlock( &Agent_vars->Liste_visuel_synchro );
           visu->changed = FALSE;
-          visu->next_send = Agent->Top + 10;                                                  /* Next update dans 1 seconde */
+          visu->next_send = Agent_get_top ( Agent ) + 10;                                                  /* Next update dans 1 seconde */
           Agent_vars->audit_bit_interne_per_sec++;
         }
        liste = g_slist_next(liste);

@@ -75,7 +75,7 @@
 /******************************************************************************************************************************/
  void Dls_data_WATCHDOG_set ( struct DLS_PLUGIN *plugin, struct DLS_WATCHDOG *bit, gint consigne )
   { if (!bit) return;
-    bit->top = Agent->Top + consigne;
+    bit->top = Agent_get_top ( Agent ) + consigne;
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_WATCHDOG '%s:%s'=%d",
               (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, consigne );
@@ -87,7 +87,7 @@
 /******************************************************************************************************************************/
  gboolean Dls_data_WATCHDOG_get ( struct DLS_WATCHDOG *bit )
   { if (!bit) return(FALSE);
-    return( (Agent->Top < bit->top ? TRUE : FALSE) ); /* False = Compteur échu */
+    return( (Agent_get_top ( Agent ) < bit->top ? TRUE : FALSE) ); /* False = Compteur échu */
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_get_time: Renvoie le temps de decompte restant du watchdog                                               */
@@ -95,7 +95,7 @@
 /******************************************************************************************************************************/
  gint Dls_data_WATCHDOG_get_time ( struct DLS_WATCHDOG *bit )
   { if (!bit) return(0);
-    return( (Agent->Top < bit->top ? (bit->top - Agent->Top) : 0) );
+    return( (Agent_get_top ( Agent ) < bit->top ? (bit->top - Agent_get_top ( Agent )) : 0) );
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_set_from_thread_watchdog: Positionne un watchdog dans DLS depuis un watchdog 'thread'                    */

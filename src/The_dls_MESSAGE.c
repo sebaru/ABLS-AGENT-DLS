@@ -162,7 +162,7 @@
            { gchar *libelle_converted = Convert_libelle_dynamique ( libelle_source );
              g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_converted );
              g_free(libelle_converted);
-             msg->next_top_check_libelle = Agent->Top + freeze;                                              /* Freeze time */
+             msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                              /* Freeze time */
            }
           else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_source ); /* Pas de conversion */
           Dls_Add_message_to_master_list ( plugin, msg );
@@ -171,7 +171,7 @@
           Agent_vars->audit_bit_interne_per_sec++;
         }
        else if ( msg->etat && msg->libelle_is_dynamic && freeze >=0 &&              /* Update periodique du libelle dynamique */
-                 msg->next_top_check_libelle <= Agent->Top)
+                 msg->next_top_check_libelle <= Agent_get_top ( Agent ))
         { gchar *libelle_converted = Convert_libelle_dynamique ( Json_get_string(msg->source_node, "libelle") );
           gboolean libelle_changed = strcmp ( libelle_converted, msg->libelle_converted );
           if (libelle_changed)
@@ -179,7 +179,7 @@
              Dls_Add_message_to_master_list ( plugin, msg );
            }
           g_free(libelle_converted);
-          msg->next_top_check_libelle = Agent->Top + freeze;                                                 /* freeze time */
+          msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                                 /* freeze time */
         }
        msg->etat = msg->new_etat;                                                                /* Sauvegarde du nouvel état */
        msg->new_etat = FALSE;                                             /* Préparation du futur calcul de l'état du message */

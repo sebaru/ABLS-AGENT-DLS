@@ -51,22 +51,25 @@
      }
     g_thread_pool_set_max_unused_threads ( 1 );
 
-    Agent_set_status ( Agent, "Loading mappings..." );
+    gpointer status = Agent_status_push ( Agent, "Loading mappings..." );
     MAP_Init();
     MAP_Remap();
-    Agent_set_status ( Agent, "Loading plugins..." );
+    Agent_status_pop ( Agent, status );
+
+    status = Agent_status_push ( Agent, "Loading plugins..." );
     Dls_Importer_plugins();
     Dls_Load_horloge_ticks();
+    Agent_status_pop ( Agent, status );
 
-    Agent_vars->next_top_2hz   = Agent->Top;
-    Agent_vars->next_top_5hz   = Agent->Top;
-    Agent_vars->next_top_1sec  = Agent->Top + 10;
-    Agent_vars->next_top_2sec  = Agent->Top + 20;
-    Agent_vars->next_top_5sec  = Agent->Top + 50;
-    Agent_vars->next_top_10sec = Agent->Top + 100;
-    Agent_vars->next_top_1min  = Agent->Top + 600;
-    Agent_vars->next_top_10min = Agent->Top + 6000;
-    Agent_vars->last_top       = Agent->Top;
+    Agent_vars->next_top_2hz   = Agent_get_top ( Agent );
+    Agent_vars->next_top_5hz   = Agent_get_top ( Agent );
+    Agent_vars->next_top_1sec  = Agent_get_top ( Agent ) + 10;
+    Agent_vars->next_top_2sec  = Agent_get_top ( Agent ) + 20;
+    Agent_vars->next_top_5sec  = Agent_get_top ( Agent ) + 50;
+    Agent_vars->next_top_10sec = Agent_get_top ( Agent ) + 100;
+    Agent_vars->next_top_1min  = Agent_get_top ( Agent ) + 600;
+    Agent_vars->next_top_10min = Agent_get_top ( Agent ) + 6000;
+    Agent_vars->last_top       = Agent_get_top ( Agent );
   }
 /******************************************************************************************************************************/
 /* Dls_end: Liberation des ressources du module DLS                                                                           */
@@ -92,18 +95,18 @@
 /******************************************************************************************************************************/
  void Dls_loop ( void )
   { Dls_Check_top_horaire ();                                              /* Mise à jour des variables de gestion de l'heure */
-    if (Agent->Top>=Agent_vars->next_top_5hz)                                                         /* Toutes les 1/5 secondes */
-     { Agent_vars->next_top_5hz = Agent->Top + 2;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_5hz)                                                         /* Toutes les 1/5 secondes */
+     { Agent_vars->next_top_5hz = Agent_get_top ( Agent ) + 2;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_5hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_5hz) );
      }
-    if (Agent->Top>=Agent_vars->next_top_2hz)                                                      /* Toutes les 1/2 secondes */
-     { Agent_vars->next_top_2hz = Agent->Top + 5;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_2hz)                                                      /* Toutes les 1/2 secondes */
+     { Agent_vars->next_top_2hz = Agent_get_top ( Agent ) + 5;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_2hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2hz) );
      }
-    if (Agent->Top>=Agent_vars->next_top_1sec)                                                         /* Toutes les secondes */
-     { Agent_vars->next_top_1sec = Agent->Top + 10;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_1sec)                                                         /* Toutes les secondes */
+     { Agent_vars->next_top_1sec = Agent_get_top ( Agent ) + 10;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1sec, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_1sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_1sec) );
 
@@ -112,27 +115,27 @@
        Agent_vars->audit_bit_interne_per_sec = 0;
        Dls_data_AI_set ( Agent_vars->sys_bit_per_sec, (gdouble)Agent_vars->audit_bit_interne_per_sec_hold, TRUE );
      }
-    if (Agent->Top>=Agent_vars->next_top_2sec)                                                       /* Toutes les 2 secondes */
-     { Agent_vars->next_top_2sec = Agent->Top+20;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_2sec)                                                       /* Toutes les 2 secondes */
+     { Agent_vars->next_top_2sec = Agent_get_top ( Agent )+20;
        Dls_data_BI_set ( NULL, Agent_vars->sys_flipflop_2sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2sec) );
      }
-    if (Agent->Top>=Agent_vars->next_top_5sec)                                                       /* Toutes les 5 secondes */
-     { Agent_vars->next_top_5sec = Agent->Top + 50;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_5sec)                                                       /* Toutes les 5 secondes */
+     { Agent_vars->next_top_5sec = Agent_get_top ( Agent ) + 50;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5sec, TRUE );
      }
-    if (Agent->Top>=Agent_vars->next_top_10sec)                                                     /* Toutes les 10 secondes */
-     { Agent_vars->next_top_10sec = Agent->Top + 100;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_10sec)                                                     /* Toutes les 10 secondes */
+     { Agent_vars->next_top_10sec = Agent_get_top ( Agent ) + 100;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
-       Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Mqtt_is_connected ( Agent->mqtt_local ) );
+       Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Agent_is_mqtt_local_connected ( Agent ) );
      }
-    if (Agent->Top>=Agent_vars->next_top_1min)                                                          /* Toutes les minutes */
-     { Agent_vars->next_top_1min = Agent->Top + 600;
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_1min)                                                          /* Toutes les minutes */
+     { Agent_vars->next_top_1min = Agent_get_top ( Agent ) + 600;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min, TRUE );
        Dls_data_activer_horloge();
        Run_thread_detached ( "Running Archive Thread", (GThreadFunc)Archive_all_thread, NULL );
      }
-    if (Agent->Top>=Agent_vars->next_top_10min)                                                      /* Toutes les 10 minutes */
-     { Agent_vars->next_top_10min = Agent->Top + 6000; }
+    if (Agent_get_top ( Agent )>=Agent_vars->next_top_10min)                                                      /* Toutes les 10 minutes */
+     { Agent_vars->next_top_10min = Agent_get_top ( Agent ) + 6000; }
 
     Dls_set_edge();
     Dls_set_cde_exterieure();
@@ -293,7 +296,7 @@
 /* Sortie : le top horloge                                                                                                    */
 /******************************************************************************************************************************/
  gint Dls_get_top ( void )
-  { return (Agent->Top); }
+  { return (Agent_get_top ( Agent )); }
 /******************************************************************************************************************************/
 /* Dls_PID: Gestion du PID                                                                                                    */
 /* Sortie : TRUE sur le regean est UP                                                                                         */
@@ -422,22 +425,22 @@
   { setenv ( "ABLS_AGENT_TECH_ID", "DLS", 1 );
     setenv ( "ABLS_TPS", "100", 1 );
     Agent = Agent_init ( argv[0], "server", ABLS_AGENT_DLS_VERSION, sizeof(struct DLS_VARS), argc, argv );
-    Agent_vars = Agent->vars;
+    Agent_vars = Agent_get_vars ( Agent );
 
-    Mqtt_subscribe ( Agent->mqtt_local, "SET_AI/#" );
-    Mqtt_subscribe ( Agent->mqtt_local, "SET_DI/#" );
-    Mqtt_subscribe ( Agent->mqtt_local, "SET_WATCHDOG/#" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_AI/#" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_DI/#" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/#" );
 
     Agent_is_ready ( Agent );
 
     Dls_init();
-    Agent_set_status ( Agent, "D.L.S Running" );
+    Agent_status_push ( Agent, "D.L.S Running" );
 
-    while(Agent->Agent_run == AGENT_IS_RUNNING)                                              /* On tourne tant que necessaire */
+    while(Agent_is_running ( Agent ))                                              /* On tourne tant que necessaire */
      { Agent_loop ( Agent );                                             /* Loop sur l'agent pour mettre a jour la telemetrie */
 /****************************************************** Ecoute du master ******************************************************/
        JsonNode *mqtt_local_message;
-       while ( (mqtt_local_message = Mqtt_get_message ( Agent->mqtt_local ) ) != NULL )
+       while ( (mqtt_local_message = Agent_get_mqtt_local_message ( Agent ) ) != NULL )
         { if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_AI", "+" ))
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
@@ -448,7 +451,7 @@
              Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
              Dls_data_DI_set_from_thread_di ( mqtt_local_message );
            }
-          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", Agent->agent_tech_id ))
+          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", Agent_get_tech_id ( Agent ) ))
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
              Dls_data_WATCHDOG_set_from_thread_watchdog ( mqtt_local_message );
@@ -458,8 +461,8 @@
 /****************************************************** Ecoute de l'api *******************************************************/
        JsonNode *mqtt_api_message;
        while ( (mqtt_api_message = Agent_get_mqtt_api_message ( Agent ) ) != NULL )
-        { if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "AGENT", Agent->agent_tech_id, "TEST" ) )
-           { Info(__func__, Agent->agent_classe, Agent->agent_tech_id, LOG_NOTICE, "Agent Test from API."); }
+        { if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "AGENT", Agent_get_tech_id ( Agent ), "TEST" ) )
+           { Info(__func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "Agent Test from API."); }
 /*------------------------------------------------------------ Remap ---------------------------------------------------------*/
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "REMAP" ) )
            { MAP_Remap(); }
@@ -469,7 +472,7 @@
            }
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "RELOAD_HORLOGE_TICK" ) )
            { Dls_Load_horloge_ticks(); }
-          else Info( __func__, Agent->agent_classe, Agent->agent_tech_id, LOG_NOTICE, "API sent unknown command %s", Json_get_string ( mqtt_api_message, "mqtt_topic" ) );
+          else Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "API sent unknown command %s", Json_get_string ( mqtt_api_message, "mqtt_topic" ) );
           Json_unref (mqtt_api_message);
         }
 /********************************************************** Running DLS *******************************************************/

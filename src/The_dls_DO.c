@@ -95,7 +95,7 @@
               (plugin ? plugin->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
     Dls_DO_report_to_API ( dout );                                                                           /* envoi a l'API */
     Archive_Send_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                          /* Archivage si besoin */
-    dout->last_arch = Agent->Top;
+    dout->last_arch = Agent_get_top ( Agent );
 
     JsonNode *RootNode = Json_create ();
     if (RootNode)
