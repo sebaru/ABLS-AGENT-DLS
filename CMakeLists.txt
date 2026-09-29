@@ -18,7 +18,7 @@ else()
   set(ABLS_AGENT_DLS_VERSION_NUMBER "0.0")
 endif()
 
-project(abls-agent-server
+project(abls-agent-dls
   VERSION ${ABLS_AGENT_DLS_VERSION_NUMBER}
   DESCRIPTION "Abls Habitat DLS runtime"
   HOMEPAGE_URL "https://docs.abls-habitat.fr"
@@ -96,7 +96,7 @@ if(NOT ABLS_SYSTEMD_UNIT_INSTALL_DIR)
   set(ABLS_SYSTEMD_UNIT_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
 endif()
 
-install(FILES packaging/systemd/abls-agent-server.service
+install(FILES packaging/systemd/abls-agent-dls.service
   DESTINATION ${ABLS_SYSTEMD_UNIT_INSTALL_DIR}
   COMPONENT runtime
 )
@@ -116,7 +116,7 @@ set(CPACK_COMPONENTS_ALL runtime)
 
 set(CPACK_RPM_RUNTIME_PACKAGE_NAME "abls-agent-dls")
 set(CPACK_RPM_RUNTIME_PACKAGE_GROUP "abls")
-set(CPACK_RPM_RUNTIME_PACKAGE_SUMMARY "Abls-Habitat Server runtime")
+set(CPACK_RPM_RUNTIME_PACKAGE_SUMMARY "Abls-Habitat DLS runtime")
 set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "glib2, json-glib, abls-libs, abls-agent-libs")
 set(CPACK_RPM_RUNTIME_POST_INSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/runtime.postinst")
 set(CPACK_RPM_RUNTIME_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/runtime.preun")
@@ -124,7 +124,7 @@ set(CPACK_RPM_RUNTIME_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/
 set(CPACK_RPM_RUNTIME_FILE_NAME "abls-agent-dls-${PROJECT_VERSION}-${CPACK_PACKAGE_RELEASE}.rpm")
 set(CPACK_RPM_RUNTIME_DEBUGINFO_PACKAGE ON)
 set(CPACK_RPM_RUNTIME_DEBUGINFO_FILE_NAME "RPM-DEFAULT")
-set(CPACK_RPM_RUNTIME_BUILD_SOURCE_DIRS_PREFIX "/usr/src/abls/server")
+set(CPACK_RPM_RUNTIME_BUILD_SOURCE_DIRS_PREFIX "/usr/src/abls/dls")
 
 set(ABLS_DEBIAN_GLIB_RUNTIME_DEPEND "libglib2.0-0t64 | libglib2.0-0")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "abls-agent-dls")
