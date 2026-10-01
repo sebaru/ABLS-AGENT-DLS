@@ -352,7 +352,10 @@
     DLS_MONITOR_DI,
     DLS_MONITOR_DO,
     DLS_MONITOR_MONO,
-    DLS_MONITOR_REGISTRE
+    DLS_MONITOR_REGISTRE,
+    DLS_MONITOR_VISUEL,
+    DLS_MONITOR_WATCHDOG,
+    DLS_MONITOR_MSG
   };
 
  extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */

@@ -181,6 +181,7 @@
           g_free(libelle_converted);
           msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                                 /* freeze time */
         }
+       if (msg->etat != msg->new_etat) Dls_Monitor_mark ( plugin, DLS_MONITOR_MSG, msg );
        msg->etat = msg->new_etat;                                                                /* Sauvegarde du nouvel état */
        msg->new_etat = FALSE;                                             /* Préparation du futur calcul de l'état du message */
        liste = g_slist_next(liste);

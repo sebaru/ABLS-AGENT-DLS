@@ -120,6 +120,40 @@
           Json_add_string ( element, "unite",    target->unite );
           break;
         }
+       case DLS_MONITOR_VISUEL:
+        { struct DLS_VISUEL *target = bit;
+          Json_add_string ( element, "classe",   "VISUEL" );
+          Json_add_string ( element, "tech_id",  target->tech_id );
+          Json_add_string ( element, "acronyme", target->acronyme );
+          Json_add_string ( element, "mode",     target->mode );
+          Json_add_string ( element, "color",    target->color );
+          Json_add_string ( element, "libelle",  target->libelle );
+          Json_add_string ( element, "badge",    target->badge );
+          Json_add_double ( element, "valeur",   target->valeur );
+          Json_add_string ( element, "unite",    target->unite );
+          Json_add_bool   ( element, "cligno",   target->cligno );
+          Json_add_bool   ( element, "noshow",   target->noshow );
+          Json_add_bool   ( element, "disable",  target->disable );
+          break;
+        }
+       case DLS_MONITOR_WATCHDOG:
+        { struct DLS_WATCHDOG *target = bit;
+          Json_add_string ( element, "classe",   "WATCHDOG" );
+          Json_add_string ( element, "tech_id",  target->tech_id );
+          Json_add_string ( element, "acronyme", target->acronyme );
+          Json_add_bool   ( element, "etat",     Dls_data_WATCHDOG_get ( target ) );
+          Json_add_int    ( element, "decompte", Dls_data_WATCHDOG_get_time ( target ) );
+          break;
+        }
+       case DLS_MONITOR_MSG:
+        { struct DLS_MESSAGE *target = bit;
+          Json_add_string ( element, "classe",   "MSG" );
+          Json_add_string ( element, "tech_id",  target->tech_id );
+          Json_add_string ( element, "acronyme", target->acronyme );
+          Json_add_bool   ( element, "etat",     target->etat );
+          Json_add_string ( element, "libelle",  target->libelle_converted );
+          break;
+        }
        default: Json_add_string ( element, "classe", "UNKNOWN" );
      }
   }
@@ -186,6 +220,9 @@
     Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_DO,       DLS_MONITOR_DO );
     Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_MONO,     DLS_MONITOR_MONO );
     Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_REGISTRE, DLS_MONITOR_REGISTRE );
+    Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_VISUEL,   DLS_MONITOR_VISUEL );
+    Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_WATCHDOG, DLS_MONITOR_WATCHDOG );
+    Dls_Monitor_add_all_bits_in_array ( bits, plugin->Dls_data_MESSAGE,  DLS_MONITOR_MSG );
 
     Info( __func__, FACILITY_MONITOR, plugin->tech_id, LOG_INFO, "'%s': sending %d bits snapshot",
           plugin->tech_id, json_array_get_length ( bits ) );

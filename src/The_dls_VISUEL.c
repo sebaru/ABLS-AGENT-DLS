@@ -262,7 +262,8 @@
           Agent_vars->Liste_visuel = g_slist_append( Agent_vars->Liste_visuel, visu );
           g_rw_lock_writer_unlock( &Agent_vars->Liste_visuel_synchro );
           visu->changed = FALSE;
-          visu->next_send = Agent_get_top ( Agent ) + 10;                                                  /* Next update dans 1 seconde */
+          visu->next_send = Agent_get_top ( Agent ) + 10;                                       /* Next update dans 1 seconde */
+          Dls_Monitor_mark ( plugin, DLS_MONITOR_VISUEL, visu );
           Agent_vars->audit_bit_interne_per_sec++;
         }
        liste = g_slist_next(liste);
