@@ -63,9 +63,10 @@
     return(found);
   }
 /******************************************************************************************************************************/
-/* Dls_foreach_dls_tree: Parcours recursivement l'arbre DLS et execute des commandes en parametres                            */
-/* Entrée : le Dls_tree et les fonctions a appliquer                                                                          */
+/* Dls_foreach_plugins: Parcours les plugins et applique la fonction passée en paramètre                                      */
+/* Entrée : la fonction à appliquer à chaque plugin                                                                           */
 /* Sortie : rien                                                                                                              */
+/* Synchronisation: conserve Dls_plugins_lock en lecture pendant chaque appel du callback                                    */
 /******************************************************************************************************************************/
  void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) )
   { g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
@@ -243,6 +244,7 @@
 /* Dls_remap: remap les alias et pointeurs internes d'un plugin                                                               */
 /* Entrée: le plugin                                                                                                          */
 /* Sortie : les alias sont mappés                                                                                             */
+/* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
  static void Dls_plugin_remap_alias ( struct DLS_PLUGIN *plugin )
   { if (plugin->handle && plugin->remap_all_alias)
@@ -429,6 +431,9 @@
     g_rw_lock_writer_unlock ( &Agent_vars->Dls_plugins_lock );
     Dls_plugins_remap_all_alias();                                             /* Remap de tous les alias de tous les plugins */
 
+    Dls_Monitor_stop ( plugin );
+    Dls_foreach_plugins ( Dls_Monitor_clear );      /* Les bits du plugin vont disparaître: aucune table ne doit les référencer */
+
     Dls_Save_Data_to_API ( plugin );                                              /* Sauvegarde les valeurs des bits internes */
     if (plugin->handle && dlclose( plugin->handle ))
      { Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "dlclose error '%s' for '%s' (%s)",
@@ -465,26 +470,6 @@
      { struct DLS_PLUGIN *plugin = Agent_vars->Dls_plugins->data;
        Dls_Decharger_un_plugin ( plugin->tech_id );
      }
-  }
-/******************************************************************************************************************************/
-/* Dls_Debug_plugin: Active ou non le debug d'un plugin                                                                       */
-/* Entrée: le tech_id et le choix actif ou non                                                                                */
-/* Sortie: Rien                                                                                                               */
-/******************************************************************************************************************************/
- void Dls_Debug_plugin ( gchar *tech_id, gboolean actif )
-  { if (!tech_id)
-     { Info( __func__, FACILITY_PLUGIN, NULL, LOG_ERR, "tech_id is null.");
-       return;
-     }
-    struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id ( tech_id );
-    if (!plugin)
-    { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "Plugin '%s' not found", tech_id );
-       return;
-     }
-
-    plugin->debug = actif;
-    Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' debug %s ('%s')",
-          plugin->tech_id, (actif ? "started" : "stopped"), plugin->name );
   }
 /******************************************************************************************************************************/
 /* Activer_plugin_by_id: Active ou non un plugin by id                                                                        */

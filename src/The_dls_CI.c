@@ -88,6 +88,7 @@
                     "ligne %04d: Changing DLS_CI '%s:%s'=%d",
                     (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
           if (plugin && plugin->debug) Dls_CI_report_to_API ( bit );                                   /* Si debug, envoi à l'API */
+          Dls_Monitor_mark ( plugin, DLS_MONITOR_CI, bit );
         }
      }
     else
@@ -116,6 +117,7 @@
              "ligne %04d: DLS_CI '%s:%s'=%d resetted",
              (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
        bit->valeur = 0;                                                                          /* Valeur réelle du compteur */
+       Dls_Monitor_mark ( plugin, DLS_MONITOR_CI, bit );
      }
   }
 /******************************************************************************************************************************/

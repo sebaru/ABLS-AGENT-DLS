@@ -112,6 +112,7 @@
         Agent_vars->audit_bit_interne_per_sec++;
         Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
         bit->last_arch = Agent_get_top ( Agent );
+        Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_DI, bit->tech_id, bit );
         Dls_DI_report_to_API ( bit );                                                                        /* envoi a l'API */
      }
   }

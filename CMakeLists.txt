@@ -35,6 +35,7 @@ pkg_check_modules(ABLS_AGENT_LIBS REQUIRED abls-agent-libs)
 
 add_executable(abls-agent-dls
   src/dls.c
+  src/dls_monitor.c
   src/plugins.c
   src/heure.c
   src/map.c
