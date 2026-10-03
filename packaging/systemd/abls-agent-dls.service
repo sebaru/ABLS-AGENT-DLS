@@ -6,8 +6,8 @@ After=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/abls-agent-dls
-DynamicUser=yes
-SupplementaryGroups=abls
+User=abls-agent-dls
+Group=abls
 StateDirectory=abls-agent-dls
 WorkingDirectory=%S/abls-agent-dls
 Restart=on-failure

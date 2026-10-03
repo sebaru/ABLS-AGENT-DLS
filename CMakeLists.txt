@@ -118,7 +118,7 @@ set(CPACK_COMPONENTS_ALL runtime)
 set(CPACK_RPM_RUNTIME_PACKAGE_NAME "abls-agent-dls")
 set(CPACK_RPM_RUNTIME_PACKAGE_GROUP "abls")
 set(CPACK_RPM_RUNTIME_PACKAGE_SUMMARY "Abls-Habitat DLS runtime")
-set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "glib2, json-glib, abls-libs, abls-agent-libs")
+set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "glib2, json-glib, abls-libs, abls-agent-libs, shadow-utils")
 set(CPACK_RPM_RUNTIME_POST_INSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/runtime.postinst")
 set(CPACK_RPM_RUNTIME_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/runtime.preun")
 set(CPACK_RPM_RUNTIME_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/runtime.postun")
@@ -129,7 +129,7 @@ set(CPACK_RPM_RUNTIME_BUILD_SOURCE_DIRS_PREFIX "/usr/src/abls/dls")
 
 set(ABLS_DEBIAN_GLIB_RUNTIME_DEPEND "libglib2.0-0t64 | libglib2.0-0")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "abls-agent-dls")
-set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "${ABLS_DEBIAN_GLIB_RUNTIME_DEPEND}, libjson-glib-1.0-0, abls-libs, abls-agent-libs")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "${ABLS_DEBIAN_GLIB_RUNTIME_DEPEND}, libjson-glib-1.0-0, abls-libs, abls-agent-libs, adduser")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_CONTROL_EXTRA
   "${CMAKE_SOURCE_DIR}/packaging/deb/postinst"
