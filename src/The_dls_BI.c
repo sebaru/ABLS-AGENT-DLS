@@ -120,7 +120,8 @@
 /* Sortie : le JSON                                                                                                           */
 /******************************************************************************************************************************/
  void Dls_BI_report_to_API ( struct DLS_BI *bit )
-  { JsonNode *element = Json_create ();
+  { if (bit == NULL) return;
+    JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
        Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/BI/%s/%s", bit->tech_id, bit->acronyme );

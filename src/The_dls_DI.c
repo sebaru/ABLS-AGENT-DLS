@@ -192,7 +192,8 @@
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
  void Dls_DI_report_to_API ( struct DLS_DI *bit )
-  { JsonNode *element = Json_create ();
+  { if (bit == NULL) return;
+    JsonNode *element = Json_create ();
     if (element)
      { Json_add_bool ( element, "etat", bit->etat );
        Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );

@@ -174,7 +174,8 @@
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
  void Dls_AI_report_to_API ( struct DLS_AI *bit )
-  { JsonNode *element = Json_create ();
+  { if (bit == NULL) return;
+    JsonNode *element = Json_create ();
     if (element && bit)
      { Json_add_double ( element, "valeur",   bit->valeur );
        Json_add_bool   ( element, "in_range", bit->in_range );

@@ -120,7 +120,8 @@
 /* Sortie : néant                                                                                                             */
 /******************************************************************************************************************************/
  void Dls_REGISTRE_report_to_API ( struct DLS_REGISTRE *bit )
-  { JsonNode *element = Json_create ();
+  { if (bit == NULL) return;
+    JsonNode *element = Json_create ();
     if (element)
      { Json_add_double ( element, "valeur", bit->valeur );
        Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/REGISTRE/%s/%s", bit->tech_id, bit->acronyme );
