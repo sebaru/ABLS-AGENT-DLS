@@ -116,7 +116,7 @@
   { gchar source_file[128];
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Saving '%s' to disk started", tech_id );
-    g_snprintf( source_file, sizeof(source_file), "Dls/%s.c", tech_id );
+    g_snprintf( source_file, sizeof(source_file), "%s.c", tech_id );
     unlink(source_file);
     gint id_fichier = open( source_file, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR );
     if (id_fichier<0 || lockf( id_fichier, F_TLOCK, 0 ) )
@@ -147,8 +147,8 @@
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Compilation of '%s' started", tech_id );
     gint top = Agent_get_top ( Agent );
-    g_snprintf( source_file, sizeof(source_file), "Dls/%s.c", tech_id );
-    g_snprintf( target_file, sizeof(target_file),  "Dls/libdls%s.so", tech_id );
+    g_snprintf( source_file, sizeof(source_file), "%s.c", tech_id );
+    g_snprintf( target_file, sizeof(target_file),  "libdls%s.so", tech_id );
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "Starting GCC." );
 
     gint pidgcc = fork();
@@ -183,7 +183,7 @@
 /******************************************************************************************************************************/
  static gboolean Dls_Dlopen_plugin ( struct DLS_PLUGIN *plugin )
   { gchar nom_fichier_absolu[60];
-    g_snprintf( nom_fichier_absolu, sizeof(nom_fichier_absolu), "Dls/libdls%s.so", plugin->tech_id );
+    g_snprintf( nom_fichier_absolu, sizeof(nom_fichier_absolu), "libdls%s.so", plugin->tech_id );
 
     if (plugin->handle)                                /* Si deja chargé, on le décharge. A ce niveau, dls est stoppé (mutex) */
      { if (dlclose( plugin->handle ))
@@ -314,7 +314,7 @@
      }
 
     gchar nom_fichier[60];
-    g_snprintf( nom_fichier, sizeof(nom_fichier), "Dls/libdls-%s.so", tech_id );
+    g_snprintf( nom_fichier, sizeof(nom_fichier), "libdls-%s.so", tech_id );
     if (g_file_test(nom_fichier, G_FILE_TEST_IS_REGULAR ))
      { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Plugin '%s' already exists on disk. Loading.", tech_id ); }
     else if ( !Json_has_member ( api_result, "codec" ) )
@@ -389,7 +389,7 @@
   { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Starting reload of plugin '%s'", tech_id );
     Dls_Decharger_un_plugin( tech_id );                                                 /* d'abord on le libère de la mémoire */
     gchar nom_fichier[60];
-    g_snprintf( nom_fichier, sizeof(nom_fichier), "Dls/libdls-%s.so", tech_id );
+    g_snprintf( nom_fichier, sizeof(nom_fichier), "libdls-%s.so", tech_id );
     g_unlink(nom_fichier);                                                                         /* puis on supprime le .so */
     g_thread_pool_push( Agent_vars->Thread_import_plugin_pool, g_strdup(tech_id), NULL );
   }
