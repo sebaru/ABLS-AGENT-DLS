@@ -51,6 +51,7 @@
 /* Archive_run: Gere l'archivage des bits internes le necessitant                                                             */
 /* Entrée : le plugin a traiter                                                                                               */
 /* Sortie : rien                                                                                                              */
+/* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
  static void Archive_run ( struct DLS_PLUGIN *plugin )
   { if (!plugin) return;

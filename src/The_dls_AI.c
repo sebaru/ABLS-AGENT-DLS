@@ -99,6 +99,7 @@
     bit->in_range = in_range;
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "Changing DLS_AI '%s:%s'=%f %s", bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
+    Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_AI, bit->tech_id, bit );
     Dls_AI_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/

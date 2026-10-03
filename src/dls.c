@@ -104,6 +104,7 @@
      { Agent_vars->next_top_2hz = Agent_get_top ( Agent ) + 5;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_2hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2hz) );
+       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_flush );
      }
     if (Agent_get_top ( Agent )>=Agent_vars->next_top_1sec)                                                         /* Toutes les secondes */
      { Agent_vars->next_top_1sec = Agent_get_top ( Agent ) + 10;
@@ -127,6 +128,7 @@
      { Agent_vars->next_top_10sec = Agent_get_top ( Agent ) + 100;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
        Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Agent_is_mqtt_local_connected ( Agent ) );
+       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_watchdog );
      }
     if (Agent_get_top ( Agent )>=Agent_vars->next_top_1min)                                                          /* Toutes les minutes */
      { Agent_vars->next_top_1min = Agent_get_top ( Agent ) + 600;
@@ -363,6 +365,7 @@
 /* Dls_run_plugin: Fait tourner les DLS synoptique en parametre                                                               */
 /* Entrée : le plugin DLS correspondant                                                                                       */
 /* Sortie : rien                                                                                                              */
+/* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
  void Dls_run_plugin ( struct DLS_PLUGIN *plugin )
   { struct timeval tv_avant, tv_apres;
@@ -377,9 +380,9 @@
        liste = g_slist_next ( liste );
      }
 
-    if ( Dls_data_MONO_get ( plugin->dls_comm ) != bit_comm_module )                    /* Envoi à l'API si il y a écart */
+    if ( Dls_data_MONO_get ( plugin->dls_comm ) != bit_comm_module )                    /* Mise à jour si écart */
      { Dls_data_MONO_set ( plugin, plugin->dls_comm, bit_comm_module );
-      Dls_MONO_report_to_API ( plugin->dls_comm );
+       Dls_MONO_report_to_API ( plugin->dls_comm );
      }
 
 /*-------------------------------------------------- Calcul du MEMSA_OK ------------------------------------------------------*/
@@ -430,6 +433,7 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_AI/#" );
     Agent_subscribe_mqtt_local ( Agent, "SET_DI/#" );
     Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/#" );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/#", Agent_get_domain_uuid ( Agent ) );
 
     Agent_is_ready ( Agent );
 
@@ -467,11 +471,15 @@
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "REMAP" ) )
            { MAP_Remap(); }
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "RELOAD", "+" ) )
-           { gchar *target = Json_get_string ( mqtt_api_message, "mqtt_topic_lvl2" );
+           { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Reload_un_plugin ( target );                                            /* Use thread_pool donc non bloquant */
            }
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "RELOAD_HORLOGE_TICK" ) )
            { Dls_Load_horloge_ticks(); }
+          else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "MONITOR", "+" ) )
+           { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
+             Dls_Monitor_set ( target, Json_get_bool ( mqtt_api_message, "enable" ) );
+           }
           else Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "API sent unknown command %s", Json_get_string ( mqtt_api_message, "mqtt_topic" ) );
           Json_unref (mqtt_api_message);
         }

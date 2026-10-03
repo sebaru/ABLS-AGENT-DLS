@@ -79,6 +79,8 @@
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_WATCHDOG '%s:%s'=%d",
               (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, consigne );
+    if (plugin) Dls_Monitor_mark ( plugin, DLS_MONITOR_WATCHDOG, bit );
+    else        Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_WATCHDOG, bit->tech_id, bit );
     Agent_vars->audit_bit_interne_per_sec++;
   }
 /******************************************************************************************************************************/

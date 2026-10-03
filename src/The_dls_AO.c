@@ -100,6 +100,7 @@
      }
     else Info( __func__, "dls", bit->tech_id, LOG_ERR, "JSon RootNode creation failed" );
     Agent_vars->audit_bit_interne_per_sec++;
+    Dls_Monitor_mark ( plugin, DLS_MONITOR_AO, bit );
     Dls_AO_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/

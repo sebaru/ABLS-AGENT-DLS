@@ -96,6 +96,7 @@
                     "ligne %04d: DLS_CH '%s:%s'=%d is now counting",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
           if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
+          Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
         }
        else                                                                                                       /* Comptage */
         { int new_top, delta;
@@ -105,6 +106,7 @@
            { bit->valeur += delta;
              bit->old_top = new_top;
              if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                /* Si debug, envoi a l'API */
+             Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
              Agent_vars->audit_bit_interne_per_sec++;
            }
         }
@@ -116,6 +118,7 @@
                     "ligne %04d: DLS_CH '%s:%s'=%d is not counting anymore",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
           if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
+          Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
         }
      }
   }
@@ -134,6 +137,7 @@
        bit->valeur = 0;
        bit->etat   = FALSE;
        if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                      /* Si debug, envoi a l'API */
+       Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
      }
   }
 /******************************************************************************************************************************/

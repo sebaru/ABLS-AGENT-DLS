@@ -81,6 +81,7 @@
     if (valeur != registre->valeur)
      { registre->valeur = valeur;
       if (plugin && plugin->debug) Dls_REGISTRE_report_to_API ( registre );
+      Dls_Monitor_mark ( plugin, DLS_MONITOR_REGISTRE, registre );
       Info( __func__, "dls", registre->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_REGISTRE '%s:%s'=%f",
                  (plugin ? plugin->num_ligne : -1), registre->tech_id, registre->acronyme, registre->valeur );

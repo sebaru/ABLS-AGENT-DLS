@@ -89,6 +89,7 @@
 
     guint audit_bit_interne_per_sec;
     guint audit_bit_interne_per_sec_hold;
+    guint nbr_plugins_monitored;                      /* Nombre de plugins en cours de monitoring, pour court-circuiter vite */
 
     guint next_top_2hz;
     guint next_top_5hz;
@@ -303,6 +304,8 @@
 
     gboolean restart;                                   /* 1 si les bits internes "start" du plugins doivent etre positionnés */
     gboolean debug;                                                 /* TRUE si le plugin doit logguer ses changements de bits */
+    guint    monitor_until_top;                     /* Date d'extinction automatique du monitoring si l'API ne le relance pas */
+    GHashTable *monitor_changed;          /* Bits modifiés depuis le dernier flush: clé=pointeur du bit, valeur=classe du bit */
     gint     num_ligne;                                                         /* N° de ligne du plugin en cours d'execution */
     struct DLS_MONO *dls_comm;
     struct DLS_MONO *dls_memsa_ok;
@@ -340,6 +343,21 @@
     gboolean etat;
   };
 
+ enum                                                              /* Classes de bits remontées par le monitoring temps réel */
+  { DLS_MONITOR_AI = 1,
+    DLS_MONITOR_AO,
+    DLS_MONITOR_BI,
+    DLS_MONITOR_CH,
+    DLS_MONITOR_CI,
+    DLS_MONITOR_DI,
+    DLS_MONITOR_DO,
+    DLS_MONITOR_MONO,
+    DLS_MONITOR_REGISTRE,
+    DLS_MONITOR_VISUEL,
+    DLS_MONITOR_WATCHDOG,
+    DLS_MONITOR_MSG
+  };
+
  extern struct ABLS_AGENT *Agent;                                                                 /* Structure de l'agent DLS */
  extern struct DLS_VARS *Agent_vars;                                                /* Structure des variables de l'agent DLS */
 
@@ -358,14 +376,20 @@
  extern void Dls_Reload_un_plugin ( gchar *tech_id );
  extern void Dls_Importer_un_plugin ( gpointer data, gpointer user_data );
  extern void Dls_Importer_plugins ( void );
- extern gboolean Dls_auto_create_plugin( JsonNode *RootNode );
- extern void Dls_Debug_plugin ( gchar *tech_id, gboolean actif );
  extern void Dls_Activer_plugin ( gchar *tech_id, gboolean actif );
  extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) );
  extern void Dls_Acquitter_plugin ( gchar *tech_id );
  extern struct DLS_PLUGIN *Dls_get_plugin_by_tech_id ( gchar *tech_id );
  extern void Dls_sync_all_output ( gpointer user_data, struct DLS_PLUGIN *plugin );
  extern void Dls_Save_Data_to_API ( struct DLS_PLUGIN *plugin );
+
+ extern void Dls_Monitor_set ( gchar *tech_id, gboolean actif );
+ extern void Dls_Monitor_mark ( struct DLS_PLUGIN *plugin, gint classe, gpointer bit );
+ extern void Dls_Monitor_mark_by_tech_id ( gint classe, gchar *tech_id, gpointer bit );
+ extern void Dls_Monitor_flush ( struct DLS_PLUGIN *plugin );
+ extern void Dls_Monitor_watchdog ( struct DLS_PLUGIN *plugin );
+ extern void Dls_Monitor_clear ( struct DLS_PLUGIN *plugin );
+ extern void Dls_Monitor_stop ( struct DLS_PLUGIN *plugin );
 
  extern void Dls_data_CI_create_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data );
  extern void Dls_all_CI_to_json ( gpointer array, struct DLS_PLUGIN *plugin );
