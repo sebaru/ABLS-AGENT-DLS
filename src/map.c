@@ -156,10 +156,10 @@
 
     g_rw_lock_reader_lock ( &Tree_to_agent_lock );
     JsonNode *found = g_tree_lookup ( Tree_to_agent, key );
-    if (found && Json_has_member ( found, "tech_id" ) && Json_has_member ( found, "acronyme" ) )
-    { Json_add_string ( key, "tech_id", Json_get_string ( found, "tech_id" ) );
-      Json_add_string ( key, "acronyme", Json_get_string ( found, "acronyme" ) );
-    }
+    if (found && Json_has_member ( found, "agent_tech_id" ) && Json_has_member ( found, "agent_acronyme" ) )
+     { Json_add_string ( key, "agent_tech_id", Json_get_string ( found, "agent_tech_id" ) );
+       Json_add_string ( key, "agent_acronyme", Json_get_string ( found, "agent_acronyme" ) );
+     }
     g_rw_lock_reader_unlock ( &Tree_to_agent_lock );
     return( (found ? TRUE : FALSE ) );
   }
