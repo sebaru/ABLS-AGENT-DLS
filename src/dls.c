@@ -434,6 +434,7 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_DI/#" );
     Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/#" );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/#", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC/#", Agent_get_domain_uuid ( Agent ) );
 
     Agent_is_ready ( Agent );
 
@@ -446,18 +447,18 @@
        JsonNode *mqtt_local_message;
        while ( (mqtt_local_message = Agent_get_mqtt_local_message ( Agent ) ) != NULL )
         { if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_AI", "+" ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_AI_set_from_thread_ai ( mqtt_local_message );
            }
           else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_DI", "+" ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_DI_set_from_thread_di ( mqtt_local_message );
            }
-          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", Agent_get_tech_id ( Agent ) ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", "+" ))
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_WATCHDOG_set_from_thread_watchdog ( mqtt_local_message );
            }
           Json_unref ( mqtt_local_message );
@@ -479,6 +480,22 @@
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "MONITOR", "+" ) )
            { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Monitor_set ( target, Json_get_bool ( mqtt_api_message, "enable" ) );
+           }
+          else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "SYNOPTIQUE", "CLIC" ) )
+           { if ( !Json_has_member ( mqtt_api_message, "tech_id" ) )
+              { Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_ERR,
+                     "SYN_CLIC: tech_id is missing" ); }
+             else if ( !Json_has_member ( mqtt_api_message, "acronyme" ) )
+              { Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_ERR,
+                     "SYN_CLIC: acronyme is missing" ); }
+             else
+              { gchar *tech_id  = Json_get_string ( mqtt_api_message, "tech_id" );
+                gchar *acronyme = Json_get_string ( mqtt_api_message, "acronyme" );
+                struct DLS_DI *bit = Dls_data_DI_lookup ( tech_id, acronyme );
+                if (!bit) Info( __func__, Agent_get_classe ( Agent ), tech_id, LOG_ERR,
+                                "SYN_CLIC: '%s:%s' not found. Dropping.", tech_id, acronyme );
+                else Dls_data_DI_set_pulse ( NULL, bit );
+              }
            }
           else Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "API sent unknown command %s", Json_get_string ( mqtt_api_message, "mqtt_topic" ) );
           Json_unref (mqtt_api_message);
