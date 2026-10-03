@@ -45,19 +45,9 @@
        g_rw_lock_writer_unlock ( &Agent_vars->Liste_DO_synchro );
 
        if (MAP_to_agent ( RootNode ))
-        { JsonNode *Node = Json_create ();
-          if (Node)
-           { Json_add_string ( Node, "tech_id",  Json_get_string ( RootNode, "tech_id" ) );
-             Json_add_string ( Node, "acronyme", Json_get_string ( RootNode, "acronyme" ) );
-             Json_add_bool   ( Node, "etat",     Json_get_bool   ( RootNode, "etat" ) );
-             Mqtt_send_message ( agent->mqtt_local, Node, TRUE, "SET_DO/%s/%s",
-                                 Json_get_string ( RootNode, "agent_tech_id" ),
-                                 Json_get_string ( RootNode, "agent_acronyme" ) );
-             Json_unref ( Node );
-           }
-          else Info( __func__, "distrib", Json_get_string ( RootNode, "agent_tech_id" ), LOG_ERR, "'%s:%s': Json node create error",
-                         Json_get_string ( RootNode, "agent_tech_id" ),
-                         Json_get_string ( RootNode, "agent_acronyme" ) );
+        { Mqtt_Send_DO ( Agent, Json_get_string ( RootNode, "agent_tech_id" ),
+                                Json_get_string ( RootNode, "agent_acronyme" ),
+                                Json_get_bool ( RootNode, "etat" ) );
         }
        else Info( __func__, "distrib", Json_get_string ( RootNode, "tech_id" ), LOG_NOTICE,
                       "'%s:%s' is not mapped. dropping",
@@ -68,25 +58,15 @@
 
     cpt=0;
     while ( Agent_vars->Liste_AO && cpt < 50 )
-     { g_rw_lock_writer_lock( &Agent_vars->Liste_AO_synchro );                            /* Traitement des AO à distribuer */
-       RootNode = Agent_vars->Liste_AO->data;                                                    /* Recuperation du numero de AO */
+     { g_rw_lock_writer_lock( &Agent_vars->Liste_AO_synchro );                              /* Traitement des AO à distribuer */
+       RootNode = Agent_vars->Liste_AO->data;                                                 /* Recuperation du numero de AO */
        Agent_vars->Liste_AO = g_slist_remove ( Agent_vars->Liste_AO, RootNode );
        g_rw_lock_writer_unlock( &Agent_vars->Liste_AO_synchro );                            /* Traitement des AO à distribuer */
 
        if (MAP_to_agent ( RootNode ))
-        { JsonNode *Node = Json_create ();
-          if (Node)
-           { Json_add_string ( Node, "tech_id",  Json_get_string ( RootNode, "tech_id" ) );
-             Json_add_string ( Node, "acronyme", Json_get_string ( RootNode, "acronyme" ) );
-             Json_add_double ( Node, "valeur",   Json_get_double ( RootNode, "valeur" ) );
-             Mqtt_send_message ( agent->mqtt_local, Node, TRUE, "SET_AO/%s/%s",
-                                 Json_get_string ( RootNode, "agent_tech_id" ),
-                                 Json_get_string ( RootNode, "agent_acronyme" ) );
-             Json_unref ( Node );
-           }
-          else Info( __func__, "distrib", Json_get_string ( RootNode, "agent_tech_id" ), LOG_ERR, "'%s:%s': Json node create error",
-                         Json_get_string ( RootNode, "agent_tech_id" ),
-                         Json_get_string ( RootNode, "agent_acronyme" ) );
+        { Mqtt_Send_AO ( Agent, Json_get_string ( RootNode, "agent_tech_id" ),
+                                Json_get_string ( RootNode, "agent_acronyme" ),
+                                Json_get_double ( RootNode, "valeur" ) );
         }
        else Info( __func__, "distrib", Json_get_string ( RootNode, "tech_id" ), LOG_NOTICE,
                       "'%s:%s' is not mapped. dropping",
