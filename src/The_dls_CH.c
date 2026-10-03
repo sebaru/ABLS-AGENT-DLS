@@ -146,7 +146,8 @@
 /* Sortie : le JSON                                                                                                           */
 /******************************************************************************************************************************/
  void Dls_CH_report_to_API ( struct DLS_CH *bit )
-  { JsonNode *element = Json_create ();
+  { if (bit == NULL) return;
+    JsonNode *element = Json_create ();
     if (element)
      { Json_add_int  ( element, "valeur", bit->valeur );
        Json_add_bool ( element, "etat",   bit->etat );
