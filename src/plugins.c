@@ -182,8 +182,8 @@
 /* Sortie: FALSE si problème                                                                                                  */
 /******************************************************************************************************************************/
  static gboolean Dls_Dlopen_plugin ( struct DLS_PLUGIN *plugin )
-  { gchar nom_fichier_absolu[60];
-    g_snprintf( nom_fichier_absolu, sizeof(nom_fichier_absolu), "libdls%s.so", plugin->tech_id );
+  { gchar nom_fichier[128];
+    g_snprintf( nom_fichier, sizeof(nom_fichier), "./libdls%s.so", plugin->tech_id );
 
     if (plugin->handle)                                /* Si deja chargé, on le décharge. A ce niveau, dls est stoppé (mutex) */
      { if (dlclose( plugin->handle ))
@@ -194,7 +194,7 @@
        Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_NOTICE, "'%s' unloaded (%s)", plugin->tech_id, plugin->shortname );
      }
 
-    plugin->handle = dlopen( nom_fichier_absolu, RTLD_LOCAL | RTLD_NOW );                   /* Ouverture du fichier librairie */
+    plugin->handle = dlopen( nom_fichier, RTLD_LOCAL | RTLD_NOW );                          /* Ouverture du fichier librairie */
     if (!plugin->handle)
      { Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_WARNING, "'%s': dlopen failed (%s)", plugin->tech_id, dlerror() );
        return(FALSE);
