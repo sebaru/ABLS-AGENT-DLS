@@ -226,7 +226,7 @@
     GSList *Dls_data_WATCHDOG;
     GSList *Dls_data_MESSAGE;
     GSList *Dls_data_HORLOGE;
-    GSList *Agent_tech_ids;
+    GSList *Agent_tech_ids;                                            /* Liste des Agents en input ou output du plugin D.L.S */
 
     time_t start_date;
     void *handle;
