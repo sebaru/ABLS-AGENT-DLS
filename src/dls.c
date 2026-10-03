@@ -380,9 +380,9 @@
        liste = g_slist_next ( liste );
      }
 
-    if ( Dls_data_MONO_get ( plugin->dls_comm ) != bit_comm_module )                    /* Envoi à l'API si il y a écart */
+    if ( Dls_data_MONO_get ( plugin->dls_comm ) != bit_comm_module )                    /* Mise à jour si écart */
      { Dls_data_MONO_set ( plugin, plugin->dls_comm, bit_comm_module );
-      Dls_MONO_report_to_API ( plugin->dls_comm );
+       Dls_MONO_report_to_API ( plugin->dls_comm );
      }
 
 /*-------------------------------------------------- Calcul du MEMSA_OK ------------------------------------------------------*/

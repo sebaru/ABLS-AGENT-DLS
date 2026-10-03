@@ -376,7 +376,6 @@
  extern void Dls_Reload_un_plugin ( gchar *tech_id );
  extern void Dls_Importer_un_plugin ( gpointer data, gpointer user_data );
  extern void Dls_Importer_plugins ( void );
- extern gboolean Dls_auto_create_plugin( JsonNode *RootNode );
  extern void Dls_Activer_plugin ( gchar *tech_id, gboolean actif );
  extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) );
  extern void Dls_Acquitter_plugin ( gchar *tech_id );
