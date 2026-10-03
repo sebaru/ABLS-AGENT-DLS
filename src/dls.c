@@ -427,7 +427,7 @@
  gint main(gint argc, gchar *argv[])
   { setenv ( "ABLS_AGENT_TECH_ID", "DLS", 1 );
     setenv ( "ABLS_TPS", "100", 1 );
-    Agent = Agent_init ( argv[0], "server", ABLS_AGENT_DLS_VERSION, sizeof(struct DLS_VARS), argc, argv );
+    Agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct DLS_VARS), argc, argv );
     Agent_vars = Agent_get_vars ( Agent );
 
     Agent_subscribe_mqtt_local ( Agent, "SET_AI/#" );
