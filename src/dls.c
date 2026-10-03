@@ -95,19 +95,20 @@
 /******************************************************************************************************************************/
  void Dls_loop ( void )
   { Dls_Check_top_horaire ();                                              /* Mise à jour des variables de gestion de l'heure */
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_5hz)                                                         /* Toutes les 1/5 secondes */
+    guint top = Agent_get_top ( Agent );
+    if (top >= Agent_vars->next_top_5hz)                                                           /* Toutes les 1/5 secondes */
      { Agent_vars->next_top_5hz = Agent_get_top ( Agent ) + 2;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_5hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_5hz) );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_2hz)                                                      /* Toutes les 1/2 secondes */
-     { Agent_vars->next_top_2hz = Agent_get_top ( Agent ) + 5;
+    if (top >= Agent_vars->next_top_2hz)                                                           /* Toutes les 1/2 secondes */
+     { Agent_vars->next_top_2hz = top + 5;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_2hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2hz) );
        if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_flush );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_1sec)                                                         /* Toutes les secondes */
-     { Agent_vars->next_top_1sec = Agent_get_top ( Agent ) + 10;
+    if (top >= Agent_vars->next_top_1sec)                                                              /* Toutes les secondes */
+     { Agent_vars->next_top_1sec = top + 10;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1sec, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_1sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_1sec) );
 
@@ -116,34 +117,35 @@
        Agent_vars->audit_bit_interne_per_sec = 0;
        Dls_data_AI_set ( Agent_vars->sys_bit_per_sec, (gdouble)Agent_vars->audit_bit_interne_per_sec_hold, TRUE );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_2sec)                                                       /* Toutes les 2 secondes */
-     { Agent_vars->next_top_2sec = Agent_get_top ( Agent )+20;
+    if (top >= Agent_vars->next_top_2sec)                                                            /* Toutes les 2 secondes */
+     { Agent_vars->next_top_2sec = top + 20;
        Dls_data_BI_set ( NULL, Agent_vars->sys_flipflop_2sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2sec) );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_5sec)                                                       /* Toutes les 5 secondes */
-     { Agent_vars->next_top_5sec = Agent_get_top ( Agent ) + 50;
+    if (top >= Agent_vars->next_top_5sec)                                                            /* Toutes les 5 secondes */
+     { Agent_vars->next_top_5sec = top + 50;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_5sec, TRUE );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_10sec)                                                     /* Toutes les 10 secondes */
-     { Agent_vars->next_top_10sec = Agent_get_top ( Agent ) + 100;
+    if (top >= Agent_vars->next_top_10sec)                                                          /* Toutes les 10 secondes */
+     { Agent_vars->next_top_10sec = top + 100;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
        Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Agent_is_mqtt_local_connected ( Agent ) );
        if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_watchdog );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_1min)                                                          /* Toutes les minutes */
-     { Agent_vars->next_top_1min = Agent_get_top ( Agent ) + 600;
+    if (top >= Agent_vars->next_top_1min)                                                               /* Toutes les minutes */
+     { Agent_vars->next_top_1min = top + 600;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min, TRUE );
        Dls_data_activer_horloge();
        Run_thread_detached ( "Running Archive Thread", (GThreadFunc)Archive_all_thread, NULL );
      }
-    if (Agent_get_top ( Agent )>=Agent_vars->next_top_10min)                                                      /* Toutes les 10 minutes */
-     { Agent_vars->next_top_10min = Agent_get_top ( Agent ) + 6000; }
+    if (top >= Agent_vars->next_top_10min)                                                           /* Toutes les 10 minutes */
+     { Agent_vars->next_top_10min = top + 6000; }
 
     Dls_set_edge();
     Dls_set_cde_exterieure();
-    Dls_foreach_plugins ( Dls_run_plugin );
+    Dls_foreach_plugins ( Dls_run_plugin );                                       /* Fait tourner tous les plugins, un par un */
     Dls_reset_edge();
     Dls_reset_cde_exterieure();
+    Distribuer_outputs();
 
     Dls_Stop_top_horaire();
 
