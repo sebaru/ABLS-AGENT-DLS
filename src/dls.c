@@ -446,18 +446,18 @@
        JsonNode *mqtt_local_message;
        while ( (mqtt_local_message = Agent_get_mqtt_local_message ( Agent ) ) != NULL )
         { if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_AI", "+" ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_AI_set_from_thread_ai ( mqtt_local_message );
            }
           else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_DI", "+" ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_DI_set_from_thread_di ( mqtt_local_message );
            }
-          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", Agent_get_tech_id ( Agent ) ))
-           { Json_add_string ( mqtt_local_message, "agent_tech_id", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl1" ) );
-             Json_add_string ( mqtt_local_message, "agent_acronyme", Json_get_string ( mqtt_local_message, "mqtt_topic_lvl2" ) );
+          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", "+" ))
+           { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
+             Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_WATCHDOG_set_from_thread_watchdog ( mqtt_local_message );
            }
           Json_unref ( mqtt_local_message );
