@@ -148,7 +148,7 @@
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Compilation of '%s' started", tech_id );
     gint top = Agent_get_top ( Agent );
     g_snprintf( source_file, sizeof(source_file), "%s.c", tech_id );
-    g_snprintf( target_file, sizeof(target_file),  "libdls%s.so", tech_id );
+    g_snprintf( target_file, sizeof(target_file),  "libdls-%s.so", tech_id );
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "Starting GCC." );
 
     gint pidgcc = fork();
@@ -162,17 +162,21 @@
                "-I/usr/lib/i386-linux-gnu/glib-2.0/include", "-I/usr/lib/x86_64-linux-gnu/glib-2.0/include",
                "-I/usr/include/json-glib-1.0", "-I/usr/include/sysprof-4",
                "-I/usr/include/libmount", "-I/usr/include/blkid",
-               "-shared", "--no-gnu-unique", "-Wno-unused-variable", "-ggdb", "-Wall", "-lwatchdog-dls", "-lm",
+               "-shared", "--no-gnu-unique", "-Wno-unused-variable", "-ggdb", "-Wall", "-lm",
                source_file, "-fPIC", "-o", target_file, NULL );
-       _exit(0);
+       _exit(127);
      }
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "Waiting for gcc to finish pid %d", pidgcc );
     gint wcode;
     waitpid(pidgcc, &wcode, 0 );
-    gint gcc_return_code = WEXITSTATUS(wcode);
-    if (gcc_return_code == 1) unlink(target_file);
+    gint gcc_return_code = (WIFEXITED(wcode) ? WEXITSTATUS(wcode) : -1);
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_DEBUG, "gcc pid %d is down with return code %d", pidgcc, gcc_return_code );
+    if (gcc_return_code != 0)
+     { unlink(target_file);
+       Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "Compilation of '%s' failed (gcc return code %d)", tech_id, gcc_return_code );
+       return(FALSE);
+     }
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Agent_get_top ( Agent ) - top)/10.0 );
     return(TRUE);
   }
@@ -183,7 +187,7 @@
 /******************************************************************************************************************************/
  static gboolean Dls_Dlopen_plugin ( struct DLS_PLUGIN *plugin )
   { gchar nom_fichier[128];
-    g_snprintf( nom_fichier, sizeof(nom_fichier), "./libdls%s.so", plugin->tech_id );
+    g_snprintf( nom_fichier, sizeof(nom_fichier), "./libdls-%s.so", plugin->tech_id );
 
     if (plugin->handle)                                /* Si deja chargé, on le décharge. A ce niveau, dls est stoppé (mutex) */
      { if (dlclose( plugin->handle ))
