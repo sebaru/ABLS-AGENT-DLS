@@ -435,6 +435,8 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_AI/#" );
     Agent_subscribe_mqtt_local ( Agent, "SET_DI/#" );
     Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/#" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_DI_PULSE/#" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/#" );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/#", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC/#", Agent_get_domain_uuid ( Agent ) );
 
@@ -462,6 +464,37 @@
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_WATCHDOG_set_from_thread_watchdog ( mqtt_local_message );
+           }
+          else if (Mqtt_topic_is ( mqtt_local_message, 3, "SET_DI_PULSE", "+", "+" ) )
+           { gchar *from_agent_tech_id = Json_get_string ( mqtt_local_message, "from_agent_tech_id" );
+             gchar *tech_id  = Mqtt_get_topic_lvl ( mqtt_local_message, 1 );
+             gchar *acronyme = Mqtt_get_topic_lvl ( mqtt_local_message, 2 );
+             if (!from_agent_tech_id)
+              { Info( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_ERR,
+                     "SET_DI_PULSE: 'from_agent_tech_id' is missing" ); }
+             else
+              { struct DLS_DI *bit = Dls_data_DI_lookup ( tech_id, acronyme );
+                if (!bit) Info( __func__, Agent_get_classe ( Agent ), tech_id, LOG_ERR,
+                                "SET_DI_PULSE from '%s': '%s:%s' not found. Dropping.",
+                                from_agent_tech_id, tech_id, acronyme );
+                else
+                 { Info( __func__, Agent_get_classe ( Agent ), from_agent_tech_id, LOG_INFO,
+                         "SET_DI_PULSE: '%s:%s'=PULSE", tech_id, acronyme );
+                   Dls_data_DI_set_pulse ( NULL, bit );
+                 }
+              }
+           }
+          else if (Mqtt_topic_is ( mqtt_local_message, 3, "SET_CI_PULSE", "+", "+" ) )
+           { gchar *tech_id  = Mqtt_get_topic_lvl ( mqtt_local_message, 1 );
+             gchar *acronyme = Mqtt_get_topic_lvl ( mqtt_local_message, 2 );
+             struct DLS_CI *bit = Dls_data_CI_lookup ( tech_id, acronyme );
+             if (!bit) Info( __func__, Agent_get_classe ( Agent ), tech_id, LOG_ERR,
+                             "SET_CI_PULSE: '%s:%s' not found. Dropping.", tech_id, acronyme );
+             else
+              { Info( __func__, Agent_get_classe ( Agent ), tech_id, LOG_INFO,
+                      "SET_CI_PULSE: '%s:%s'=PULSE", tech_id, acronyme );
+                Dls_data_CI_set_pulse ( NULL, bit );
+              }
            }
           Json_unref ( mqtt_local_message );
         }
