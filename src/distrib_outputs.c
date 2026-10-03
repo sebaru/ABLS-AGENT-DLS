@@ -51,8 +51,8 @@
              Json_add_string ( Node, "acronyme", Json_get_string ( RootNode, "acronyme" ) );
              Json_add_bool   ( Node, "etat",     Json_get_bool   ( RootNode, "etat" ) );
              Agent_send_mqtt_api_message ( Agent, Node, TRUE, "SET_DO/%s/%s",
-                                      Json_get_string ( RootNode, "agent_tech_id" ),
-                                      Json_get_string ( RootNode, "agent_acronyme" ) );
+                                           Json_get_string ( RootNode, "agent_tech_id" ),
+                                           Json_get_string ( RootNode, "agent_acronyme" ) );
              Json_unref ( Node );
            }
           else Info( __func__, "distrib", Json_get_string ( RootNode, "agent_tech_id" ), LOG_ERR, "'%s:%s': Json node create error",
@@ -80,8 +80,8 @@
              Json_add_string ( Node, "acronyme", Json_get_string ( RootNode, "acronyme" ) );
              Json_add_double ( Node, "valeur",   Json_get_double ( RootNode, "valeur" ) );
              Agent_send_mqtt_api_message ( Agent, Node, TRUE, "SET_AO/%s/%s",
-                                      Json_get_string ( RootNode, "agent_tech_id" ),
-                                      Json_get_string ( RootNode, "agent_acronyme" ) );
+                                           Json_get_string ( RootNode, "agent_tech_id" ),
+                                           Json_get_string ( RootNode, "agent_acronyme" ) );
              Json_unref ( Node );
            }
           else Info( __func__, "distrib", Json_get_string ( RootNode, "agent_tech_id" ), LOG_ERR, "'%s:%s': Json node create error",
