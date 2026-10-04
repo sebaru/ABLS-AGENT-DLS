@@ -110,10 +110,6 @@
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1sec, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_1sec, !Dls_data_BI_get ( Agent_vars->sys_flipflop_1sec) );
 
-       Agent_vars->audit_bit_interne_per_sec_hold += Agent_vars->audit_bit_interne_per_sec;
-       Agent_vars->audit_bit_interne_per_sec_hold = Agent_vars->audit_bit_interne_per_sec_hold >> 1;
-       Agent_vars->audit_bit_interne_per_sec = 0;
-       Dls_data_AI_set ( Agent_vars->sys_bit_per_sec, (gdouble)Agent_vars->audit_bit_interne_per_sec_hold, TRUE );
      }
     if (top >= Agent_vars->next_top_2sec)                                                            /* Toutes les 2 secondes */
      { Agent_vars->next_top_2sec = top + 20;
@@ -132,6 +128,8 @@
     if (top >= Agent_vars->next_top_1min)                                                               /* Toutes les minutes */
      { Agent_vars->next_top_1min = top + 600;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_1min, TRUE );
+       Dls_data_AI_set ( Agent_vars->sys_bit_par_min, (gdouble)Agent_vars->audit_bit_interne_par_min, TRUE );
+       Agent_vars->audit_bit_interne_par_min = 0;
        Dls_data_activer_horloge();
        Run_thread_detached ( "Running Archive Thread", (GThreadFunc)Archive_all_thread, NULL );
      }
@@ -425,18 +423,18 @@
 /* Sortie: aucune                                                                                                             */
 /******************************************************************************************************************************/
  gint main(gint argc, gchar *argv[])
-  { setenv ( "ABLS_AGENT_TECH_ID", "DLS", 1 );
+  { setenv ( "ABLS_AGENT_TECH_ID", "SYS", 1 );
     setenv ( "ABLS_TPS", "100", 1 );
     Agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct DLS_VARS), argc, argv );
     Agent_vars = Agent_get_vars ( Agent );
 
-    Agent_subscribe_mqtt_local ( Agent, "SET_AI/#" );
-    Agent_subscribe_mqtt_local ( Agent, "SET_DI/#" );
-    Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/#" );
-    Agent_subscribe_mqtt_local ( Agent, "SET_DI_PULSE/#" );
-    Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/#" );
-    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/#", Agent_get_domain_uuid ( Agent ) );
-    Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC/#", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_local ( Agent, "SET_AI/+/+" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_DI/+/+" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/+/+" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_DI_PULSE/+/+" );
+    Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC", Agent_get_domain_uuid ( Agent ) );
 
     Agent_is_ready ( Agent );
 
@@ -448,17 +446,17 @@
 /****************************************************** Ecoute du master ******************************************************/
        JsonNode *mqtt_local_message;
        while ( (mqtt_local_message = Agent_get_mqtt_local_message ( Agent ) ) != NULL )
-        { if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_AI", "+" ))
+        { if (Mqtt_topic_is ( mqtt_local_message, 3, "SET_AI", "+", "+" ))
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_AI_set_from_thread_ai ( mqtt_local_message );
            }
-          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_DI", "+" ))
+          else if (Mqtt_topic_is ( mqtt_local_message, 3, "SET_DI", "+", "+" ))
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_DI_set_from_thread_di ( mqtt_local_message );
            }
-          else if (Mqtt_topic_is ( mqtt_local_message, 2, "SET_WATCHDOG", "+" ))
+          else if (Mqtt_topic_is ( mqtt_local_message, 3, "SET_WATCHDOG", "+", "+" ))
            { Json_add_string ( mqtt_local_message, "agent_tech_id", Mqtt_get_topic_lvl ( mqtt_local_message, 1 ) );
              Json_add_string ( mqtt_local_message, "agent_acronyme", Mqtt_get_topic_lvl ( mqtt_local_message, 2 ) );
              Dls_data_WATCHDOG_set_from_thread_watchdog ( mqtt_local_message );

@@ -85,7 +85,7 @@
       Info( __func__, "dls", registre->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_REGISTRE '%s:%s'=%f",
                  (plugin ? plugin->num_ligne : -1), registre->tech_id, registre->acronyme, registre->valeur );
-       Agent_vars->audit_bit_interne_per_sec++;
+       Agent_vars->audit_bit_interne_par_min++;
      }
   }
 /******************************************************************************************************************************/

@@ -99,7 +99,7 @@
        g_rw_lock_writer_unlock( &Agent_vars->Liste_AO_synchro );
      }
     else Info( __func__, "dls", bit->tech_id, LOG_ERR, "JSon RootNode creation failed" );
-    Agent_vars->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_par_min++;
     Dls_Monitor_mark ( plugin, DLS_MONITOR_AO, bit );
     Dls_AO_report_to_API ( bit );                                                                            /* envoi a l'API */
   }

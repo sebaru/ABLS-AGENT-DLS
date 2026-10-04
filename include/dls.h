@@ -67,11 +67,8 @@
     struct DLS_MONO *sys_top_5sec;
     struct DLS_MONO *sys_top_10sec;
     struct DLS_MONO *sys_top_1min;
-    struct DLS_AI *sys_bit_per_sec;
-    struct DLS_AI *sys_tour_per_sec;
-    struct DLS_AI *sys_dls_wait;
-    struct DLS_AI *sys_maxrss;
-    struct DLS_AI *sys_log_per_min;
+
+    struct DLS_AI *sys_bit_par_min;
 
     GRWLock Liste_DO_synchro;
     GSList *Liste_DO;
@@ -80,8 +77,7 @@
     GRWLock Liste_msg_synchro;
     GSList *Liste_msg;
 
-    guint audit_bit_interne_per_sec;
-    guint audit_bit_interne_per_sec_hold;
+    guint audit_bit_interne_par_min;
     guint nbr_plugins_monitored;                      /* Nombre de plugins en cours de monitoring, pour court-circuiter vite */
 
     guint next_top_2hz;

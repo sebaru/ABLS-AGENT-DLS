@@ -82,7 +82,7 @@
     if (etat)
      { if ( bit->etat == FALSE )                                                                          /* Passage en actif */
         { bit->etat = TRUE;
-          Agent_vars->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_par_min++;
           bit->valeur++;
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_CI '%s:%s'=%d",

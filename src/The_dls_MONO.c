@@ -96,7 +96,7 @@
          g_str_has_prefix ( mono->acronyme, "MEMSSP_DANGER" ) )
      { Dls_MONO_report_to_API ( mono ); }
     Dls_Monitor_mark ( plugin, DLS_MONITOR_MONO, mono );
-    Agent_vars->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_par_min++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_MONO_get: Remonte l'etat d'un monostable                                                                          */

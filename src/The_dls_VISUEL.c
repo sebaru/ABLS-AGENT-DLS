@@ -92,7 +92,7 @@
              "cligno=%d noshow=%d libelle='%s', disable=%d",
              (plugin ? plugin->num_ligne : -1), visu->tech_id, visu->acronyme,
               visu->mode, visu->color, visu->valeur, visu->unite, visu->cligno, visu->noshow, visu->libelle, visu->disable );
-       Agent_vars->audit_bit_interne_per_sec++;
+       Agent_vars->audit_bit_interne_par_min++;
      }
   }
 /******************************************************************************************************************************/
@@ -251,22 +251,29 @@
 /* Dls_data_VISUEL_apply: Met à jour les visuels du plugin                                                                    */
 /* Sortie : Néant                                                                                                             */
 /******************************************************************************************************************************/
+ static gboolean Dls_data_VISUEL_send_to_api ( struct DLS_PLUGIN *plugin, struct DLS_VISUEL *visuel )
+  { JsonNode *element = Json_create ();
+    if (!element) return(FALSE);                                                                              /* Si pb mémoire */
+    Dls_VISUEL_to_json ( element, visuel );
+    Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_VISUEL/%s/%s", visuel->tech_id, visuel->acronyme );
+    Json_unref ( element );
+    return(TRUE);
+  }
+/******************************************************************************************************************************/
+/* Dls_data_VISUEL_apply: Met à jour les visuels du plugin                                                                    */
+/* Sortie : Néant                                                                                                             */
+/******************************************************************************************************************************/
  void Dls_data_VISUEL_apply ( struct DLS_PLUGIN *plugin )
   { if (!plugin) return;
-
     GSList *liste = plugin->Dls_data_VISUEL;
     while ( liste )
-     { struct DLS_VISUEL *visu = liste->data;
-       if (visu->changed && (Agent_get_top ( Agent ) >= visu->next_send))
-        { visu->next_send = Agent_get_top ( Agent ) + 10;                                       /* Next update dans 1 seconde */
-          JsonNode *element = Json_create ();
-          if (!element) return;                                                                              /* Si pb mémoire */
-          Dls_VISUEL_to_json ( element, visu );
-          Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_VISUEL" );
-          Json_unref    ( element );
-          visu->changed = FALSE;
-          Dls_Monitor_mark ( plugin, DLS_MONITOR_VISUEL, visu );
-          Agent_vars->audit_bit_interne_per_sec++;
+     { struct DLS_VISUEL *visuel = liste->data;
+       if (visuel->changed && (Agent_get_top ( Agent ) >= visuel->next_send))
+        { visuel->next_send = Agent_get_top ( Agent ) + 10;                                       /* Next update dans 1 seconde */
+          if (!Dls_data_VISUEL_send_to_api(plugin, visuel)) break;
+          visuel->changed = FALSE;
+          Dls_Monitor_mark ( plugin, DLS_MONITOR_VISUEL, visuel );
+          Agent_vars->audit_bit_interne_par_min++;
         }
        liste = g_slist_next(liste);
      }

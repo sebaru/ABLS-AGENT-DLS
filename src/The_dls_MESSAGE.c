@@ -137,7 +137,7 @@
         { Dls_Add_message_to_master_list ( plugin, msg );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE", msg->new_etat_by_line, msg->tech_id, msg->acronyme );
-          Agent_vars->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat == FALSE && msg->new_etat == TRUE )                       /* si message activé après run du plugin */
         { /* On commence par mettre a 0 les messages du meme groupe, s'il y en a /*/
@@ -151,7 +151,7 @@
                    Dls_Add_message_to_master_list ( plugin, search_msg );
                    Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
-                   Agent_vars->audit_bit_interne_per_sec++;
+                   Agent_vars->audit_bit_interne_par_min++;
                  }
                 search = g_slist_next ( search );
               }
@@ -168,7 +168,7 @@
           Dls_Add_message_to_master_list ( plugin, msg );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
-          Agent_vars->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat && msg->libelle_is_dynamic && freeze >=0 &&              /* Update periodique du libelle dynamique */
                  msg->next_top_check_libelle <= Agent_get_top ( Agent ))
