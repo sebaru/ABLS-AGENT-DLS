@@ -40,7 +40,6 @@
   { g_rw_lock_init ( &Agent_vars->Dls_plugins_lock );
     g_rw_lock_init ( &Agent_vars->Liste_DO_synchro );
     g_rw_lock_init ( &Agent_vars->Liste_AO_synchro );
-    g_rw_lock_init ( &Agent_vars->Liste_visuel_synchro );
     g_rw_lock_init ( &Agent_vars->Liste_msg_synchro );
 
     GError *error = NULL;
@@ -83,7 +82,6 @@
     g_rw_lock_clear ( &Agent_vars->Dls_plugins_lock );
     g_rw_lock_clear ( &Agent_vars->Liste_DO_synchro );
     g_rw_lock_clear ( &Agent_vars->Liste_AO_synchro );
-    g_rw_lock_clear ( &Agent_vars->Liste_visuel_synchro );
     g_rw_lock_clear ( &Agent_vars->Liste_msg_synchro );
 
     MAP_End();

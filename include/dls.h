@@ -77,8 +77,6 @@
     GSList *Liste_DO;
     GRWLock Liste_AO_synchro;
     GSList *Liste_AO;
-    GRWLock Liste_visuel_synchro;
-    GSList *Liste_visuel;
     GRWLock Liste_msg_synchro;
     GSList *Liste_msg;
 
