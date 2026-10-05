@@ -48,6 +48,7 @@ add_executable(abls-agent-dls
   src/The_dls_DO.c
   src/The_dls_HORLOGE.c
   src/The_dls_MESSAGE.c
+  src/messages.c
   src/The_dls_MONO.c
   src/The_dls_REGISTRE.c
   src/The_dls_TEMPO.c
@@ -56,7 +57,7 @@ add_executable(abls-agent-dls
   src/archive.c
   src/The_dls_data.c
   src/distrib_outputs.c
-  src/distrib_messages.c
+  src/audio.c
 )
 
 target_include_directories(abls-agent-dls PRIVATE

@@ -33,6 +33,7 @@
  #include "map.h"
  #include "heure.h"
  #include "archive.h"
+ #include "messages.h"
 
  struct DLS_VARS
   { gboolean initialized;
@@ -74,8 +75,6 @@
     GSList *Liste_DO;
     GRWLock Liste_AO_synchro;
     GSList *Liste_AO;
-    GRWLock Liste_msg_synchro;
-    GSList *Liste_msg;
 
     guint audit_bit_interne_par_min;
     guint nbr_plugins_monitored;                      /* Nombre de plugins en cours de monitoring, pour court-circuiter vite */
@@ -104,10 +103,6 @@
     NBR_TYPE_MSG
   };
 
- struct DLS_MESSAGE_EVENT
-  { struct DLS_MESSAGE *msg;
-    gboolean etat;
-  };
 
  enum                                                              /* Classes de bits remontées par le monitoring temps réel */
   { DLS_MONITOR_AI = 1,
@@ -130,6 +125,7 @@
  extern void Dls_init ( void );
  extern void Dls_end ( void );
  extern void Dls_loop ( void );
+ extern void AUDIO_Send_to_zone ( gchar *audio_zone_name, gchar *audio_libelle );
 
  extern void Dls_set_cde_exterieure ( void );
  extern void Dls_reset_cde_exterieure ( void );
@@ -207,9 +203,7 @@
  extern void Dls_data_WATCHDOG_create_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data );
  extern gboolean Dls_data_WATCHDOG_set_from_thread_watchdog ( JsonNode *request );
 
- extern void Distribuer_messages( void );                                                        /* Distribution des messages */
  extern void Distribuer_outputs( void );                                                 /* Distribution des sorties DO et AO */
- extern gchar *Convert_libelle_dynamique( gchar *libelle_src );                               /* Conversion libelle dynamique */
 
  #endif
 /*----------------------------------------------------------------------------------------------------------------------------*/

@@ -20,6 +20,9 @@ Runtime agent for the Abls-Habitat (DLS).
 ./build.sh
 ```
 
+The default audio zone can be configured with `--audio-tech-id`,
+`ABLS_AUDIO_TECH_ID`, or the `audio_tech_id` configuration key. It defaults to `AUDIO`.
+
 ## Packaging RPM
 
 ```sh

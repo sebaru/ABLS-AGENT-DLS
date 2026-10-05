@@ -40,7 +40,6 @@
   { g_rw_lock_init ( &Agent_vars->Dls_plugins_lock );
     g_rw_lock_init ( &Agent_vars->Liste_DO_synchro );
     g_rw_lock_init ( &Agent_vars->Liste_AO_synchro );
-    g_rw_lock_init ( &Agent_vars->Liste_msg_synchro );
 
     GError *error = NULL;
     Agent_vars->Thread_import_plugin_pool = g_thread_pool_new( Dls_Importer_un_plugin, NULL, g_get_num_processors(), TRUE, &error);
@@ -82,7 +81,6 @@
     g_rw_lock_clear ( &Agent_vars->Dls_plugins_lock );
     g_rw_lock_clear ( &Agent_vars->Liste_DO_synchro );
     g_rw_lock_clear ( &Agent_vars->Liste_AO_synchro );
-    g_rw_lock_clear ( &Agent_vars->Liste_msg_synchro );
 
     MAP_End();
   }
@@ -425,6 +423,7 @@
  gint main(gint argc, gchar *argv[])
   { setenv ( "ABLS_AGENT_TECH_ID", "SYS", 1 );
     setenv ( "ABLS_TPS", "100", 1 );
+    Config_add_parameter ( "audio-tech-id", "AUDIO_TECH_ID", "Tech ID owning the audio zone DI", CONFIG_STRING );
     Agent = Agent_init ( argv[0], "dls", ABLS_AGENT_DLS_VERSION, sizeof(struct DLS_VARS), argc, argv );
     Agent_vars = Agent_get_vars ( Agent );
 
@@ -435,6 +434,21 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC", Agent_get_domain_uuid ( Agent ) );
+
+    Mnemo_create_AI   ( Agent, "BIT_PAR_MIN",   "Nombre de changements d'etat par minute", "bit/min", AGENT_ARCHIVE_1_MIN );
+    Mnemo_create_MONO ( Agent, "TOP_1MIN",      "Impulsion toutes les minutes" );
+    Mnemo_create_MONO ( Agent, "TOP_1SEC",      "Impulsion toutes les secondes" );
+    Mnemo_create_MONO ( Agent, "TOP_5SEC",      "Impulsion toutes les 5 secondes" );
+    Mnemo_create_MONO ( Agent, "TOP_10SEC",     "Impulsion toutes les 10 secondes" );
+    Mnemo_create_MONO ( Agent, "TOP_2HZ",       "Impulsion toutes les demi-secondes" );
+    Mnemo_create_MONO ( Agent, "TOP_5HZ",       "Impulsion toutes les 1/5 secondes" );
+    Mnemo_create_BI   ( Agent, "MQTT_CONNECTED","TRUE si l'agent est connecté au MQTT" );
+    Mnemo_create_BI   ( Agent, "FLIPFLOP_2SEC", "Creneaux d'une durée de deux secondes" );
+    Mnemo_create_BI   ( Agent, "FLIPFLOP_1SEC", "Creneaux d'une durée d'une seconde" );
+    Mnemo_create_BI   ( Agent, "FLIPFLOP_2HZ",  "Creneaux d'une durée d'une demi seconde" );
+    Mnemo_create_BI   ( Agent, "FLIPFLOP_5HZ",  "Creneaux d'une durée d'un 5ième de seconde" );
+    Mnemo_create_DI   ( Agent, "TOP_ALERTE_1",  "Demande d'alerte" );
+    Mnemo_create_DI   ( Agent, "TOP_ALERTE_2",  "Demande d'alerte" );
 
     Agent_is_ready ( Agent );
 
