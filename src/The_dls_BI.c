@@ -87,7 +87,7 @@
         { Agent_vars->Set_Dls_BI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_down, bi ); }
        if (plugin && plugin->debug) Dls_BI_report_to_API ( bi );                                       /* Si debug, envoi a l'API */
        Dls_Monitor_mark ( plugin, DLS_MONITOR_BI, bi );
-       Agent_vars->audit_bit_interne_per_sec++;
+       Agent_vars->audit_bit_interne_par_min++;
      }
   }
 /******************************************************************************************************************************/

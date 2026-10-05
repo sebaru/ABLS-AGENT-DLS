@@ -193,21 +193,4 @@ void MAP_Remap( void )
       Tree_root = NULL;
     }
  }
-/******************************************************************************************************************************/
-/* MQTT_Send_archive_to_API_compat: Envoie une archive vers l'API globale via MQTT                                                    */
-/* Entree: tech_id - identifiant technique                                                                                              */
-/*         acronyme - acronyme de la donnee                                                                                           */
-/*         valeur - valeur a archiver                                                                                                  */
-/* Sortie: neant                                                                                                                      */
-/******************************************************************************************************************************/
-void MQTT_Send_archive_to_API_compat ( gchar *tech_id, gchar *acronyme, gdouble valeur )
- { if (!Agent || !tech_id || !acronyme) return;
-   JsonNode *payload = Json_create();
-   if (!payload) return;
-   Json_add_string ( payload, "tech_id", tech_id );
-   Json_add_string ( payload, "acronyme", acronyme );
-   Json_add_double ( payload, "valeur", valeur );
-   Agent_send_mqtt_api_message ( Agent, payload, FALSE, "DLS_ARCHIVE/%s/%s", tech_id, acronyme );
-   Json_unref ( payload );
- }
 /*----------------------------------------------------------------------------------------------------------------------------*/

@@ -268,11 +268,7 @@
        Agent_vars->sys_top_5sec       = Dls_data_MONO_lookup ( "SYS", "TOP_5SEC" );
        Agent_vars->sys_top_10sec      = Dls_data_MONO_lookup ( "SYS", "TOP_10SEC" );
        Agent_vars->sys_top_1min       = Dls_data_MONO_lookup ( "SYS", "TOP_1MIN" );
-       Agent_vars->sys_bit_per_sec    = Dls_data_AI_lookup   ( "SYS", "DLS_BIT_PER_SEC" );
-       Agent_vars->sys_tour_per_sec   = Dls_data_AI_lookup   ( "SYS", "DLS_TOUR_PER_SEC" );
-       Agent_vars->sys_dls_wait       = Dls_data_AI_lookup   ( "SYS", "DLS_WAIT" );
-       Agent_vars->sys_maxrss         = Dls_data_AI_lookup   ( "SYS", "MAXRSS" );
-       Agent_vars->sys_log_per_min    = Dls_data_AI_lookup   ( "SYS", "LOG_PER_MIN" );
+       Agent_vars->sys_bit_par_min    = Dls_data_AI_lookup   ( "SYS", "BIT_PAR_MIN" );
      }
 
     plugin->dls_osyn_acquit             = Dls_data_DI_lookup   ( plugin->tech_id, "OSYN_ACQUIT" );

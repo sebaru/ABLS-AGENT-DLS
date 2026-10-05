@@ -107,7 +107,7 @@
              bit->old_top = new_top;
              if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                /* Si debug, envoi a l'API */
              Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
-             Agent_vars->audit_bit_interne_per_sec++;
+             Agent_vars->audit_bit_interne_par_min++;
            }
         }
      }

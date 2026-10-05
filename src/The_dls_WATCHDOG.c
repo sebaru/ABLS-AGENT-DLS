@@ -81,7 +81,7 @@
               (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, consigne );
     if (plugin) Dls_Monitor_mark ( plugin, DLS_MONITOR_WATCHDOG, bit );
     else        Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_WATCHDOG, bit->tech_id, bit );
-    Agent_vars->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_par_min++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_get: Remonte l'etat d'un watchdog                                                                        */

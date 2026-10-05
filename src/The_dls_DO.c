@@ -118,7 +118,7 @@
         }
       else Info( __func__, "dls", dout->tech_id, LOG_ERR, "JSon RootNode creation failed" );
      }
-    Agent_vars->audit_bit_interne_per_sec++;
+    Agent_vars->audit_bit_interne_par_min++;
   }
 /******************************************************************************************************************************/
 /* Dls_data_DO_get_up: Remonte le front montant d'un boolean                                                                  */

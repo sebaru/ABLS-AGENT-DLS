@@ -61,7 +61,8 @@
     bit->etat = FALSE;                                    /* A l'init, le message est OFF. Json_get_bool ( element, "etat" ); */
     bit->source_node = json_node_ref ( element );
     bit->last_on = 0;                                            /* A l'init, il n'y a pas de last on (en dixieme de seconde) */
-    bit->libelle_is_dynamic = ( g_utf8_strchr( Json_get_string ( element, "libelle" ), -1, '$') ? TRUE : FALSE );
+    gchar *libelle = Json_get_string ( element, "libelle" );
+    bit->libelle_is_dynamic = ( libelle && g_utf8_strchr( libelle, -1, '$') ? TRUE : FALSE );
 
     plugin->Dls_data_MESSAGE = g_slist_prepend ( plugin->Dls_data_MESSAGE, bit );
     Info( __func__, "dls", tech_id, LOG_INFO,
@@ -100,23 +101,88 @@
     msg->new_etat_by_line = (plugin ? plugin->num_ligne : -1);                                 /* Sauvegarde du numéro de ligne */
   }
 /******************************************************************************************************************************/
-/* Dls_Add_message_to_master_list: Ajoute un message dans la liste des messages a traiter par le master                       */
-/* Entrée: Le plugin DLS source du message, le message                                                                        */
-/* Sortie : La liste est mise à jour                                                                                          */
+/* Dls_data_MESSAGE_send_to_api: Envoie l'historique et les notifications associees au message                                */
+/* Entrée: plugin DLS, message et etat a publier                                                                              */
+/* Sortie: TRUE si le traitement est accepte                                                                                */
 /******************************************************************************************************************************/
- static void Dls_Add_message_to_master_list ( struct DLS_PLUGIN *plugin, struct DLS_MESSAGE *msg )
-  { if (! (plugin && msg)) return;
-    struct DLS_MESSAGE_EVENT *event = g_try_malloc0( sizeof (struct DLS_MESSAGE_EVENT) );
-    if (!event)
-    { Info( __func__, "dls", plugin->tech_id, LOG_ERR,
-                "Memory error for MSG'%s:%s' = %d", msg->tech_id, msg->acronyme, msg->etat );
-       return;
+ static gboolean Dls_data_MESSAGE_send_to_api ( struct DLS_PLUGIN *plugin, struct DLS_MESSAGE *msg, gboolean etat )
+  { if (!(plugin && msg)) return(FALSE);
+
+    guint top = Agent_get_top ( Agent );
+    if (msg->etat)
+     { gint rate_limit = Json_get_int ( msg->source_node, "rate_limit" );
+       if (msg->last_on && top < msg->last_on + rate_limit * 10)
+        { Info( __func__, "dls", msg->tech_id, LOG_WARNING,
+                "Rate limit (=%d) for '%s:%s' reached: not sending", rate_limit, msg->tech_id, msg->acronyme );
+          return(FALSE);
+        }
+       msg->last_on = top;
      }
-    event->etat = msg->new_etat;                                                        /* Recopie de l'état dans l'evenement */
-    event->msg  = msg;
-    g_rw_lock_writer_lock( &Agent_vars->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
-    Agent_vars->Liste_msg  = g_slist_append( Agent_vars->Liste_msg, event );
-    g_rw_lock_writer_unlock( &Agent_vars->Liste_msg_synchro );                             /* Ajout dans la liste de msg a traiter */
+
+    if (msg->etat == TRUE)                                                                                 /* Passage a  un ? */
+     { gchar date_create[128];
+       Get_datetime_usec ( date_create, sizeof(date_create) );           /* Mise à jour de de la date de création */
+       gchar *dls_shortname = Json_get_string ( msg->source_node, "dls_shortname" );
+/*------------------------------------------------ Envoi vers API ------------------------------------------------------------*/
+       JsonNode *MSGNode = Json_create();
+       if (MSGNode)
+        { Json_add_string( MSGNode, "tech_id",  msg->tech_id );
+          Json_add_string( MSGNode, "acronyme", msg->acronyme );
+          Json_add_string( MSGNode, "libelle",  msg->libelle_converted );
+          Json_add_string( MSGNode, "date_create", date_create );
+          Json_add_bool( MSGNode, "alive", TRUE );
+          Agent_send_mqtt_api_message ( Agent, MSGNode, FALSE, "DLS_HISTO" );
+          Json_unref( MSGNode );
+        }
+       else Info( __func__, "mqtt", msg->tech_id, LOG_ALERT, "Cannot send DLS_HISTO to API: memory error" );
+/*---------------------------------------------------- Envoi IMSG ------------------------------------------------------------*/
+       gint notif_chat = Json_get_int ( msg->source_node, "notif_chat" );
+       if (notif_chat == DLS_NOTIF_BY_DLS) { notif_chat = Json_get_int ( msg->source_node, "notif_chat_by_dls" ); }
+       if (notif_chat == DLS_NOTIF_YES)
+        { JsonNode *IMSGNode = Json_create();
+          if (IMSGNode)
+           { Json_add_string( IMSGNode, "tech_id", msg->tech_id );
+             Json_add_string( IMSGNode, "acronyme", msg->acronyme );
+             Json_add_string( IMSGNode, "dls_shortname", dls_shortname );
+             Json_add_string( IMSGNode, "libelle", msg->libelle_converted );
+             Agent_send_mqtt_local_message ( Agent, IMSGNode, FALSE, "SEND_IMSG" );
+             Json_unref( IMSGNode );
+           }
+          else Info( __func__, "mqtt", msg->tech_id, LOG_ALERT, "Cannot send IMSG: memory error" );
+        }
+/*---------------------------------------------------- Envoi SMS -------------------------------------------------------------*/
+       gint notif_sms = Json_get_int ( msg->source_node, "notif_sms" );
+       if (notif_sms == DLS_NOTIF_BY_DLS) { notif_sms = Json_get_int ( msg->source_node, "notif_sms_by_dls" ); }
+       if (notif_sms == DLS_NOTIF_YES || notif_sms == DLS_NOTIF_OVH_ONLY)
+        { JsonNode *SMSNode = Json_create();
+          if (SMSNode)
+           { Json_add_string( SMSNode, "tech_id", msg->tech_id );
+             Json_add_string( SMSNode, "acronyme", msg->acronyme );
+             Json_add_string( SMSNode, "dls_shortname", dls_shortname );
+             Json_add_string( SMSNode, "libelle", msg->libelle_converted );
+             Json_add_int( SMSNode, "notif_sms", notif_sms );
+             Agent_send_mqtt_local_message ( Agent, SMSNode, FALSE, "SEND_SMS" );
+             Json_unref( SMSNode );
+           }
+          else Info( __func__, "mqtt", msg->tech_id, LOG_ALERT, "Cannot send SMS: memory error" );
+        }
+/*---------------------------------------------------- Envoi AUDIO -----------------------------------------------------------*/
+       gchar *audio_zone_by_dls = Json_get_string ( msg->source_node, "audio_zone_by_dls" );
+       gchar *audio_zone_name = (strlen(audio_zone_by_dls) ? audio_zone_by_dls : Json_get_string ( msg->source_node, "audio_zone_name" ));
+       if (strcasecmp ( audio_zone_name, "ZD_NONE"))
+        { gchar *audio_libelle = Json_get_string ( msg->source_node, "audio_libelle" );
+          if (strlen(audio_libelle)) AUDIO_Send_to_zone ( audio_zone_name, audio_libelle );
+        }
+      }
+     else if (msg->etat == 0)
+      { JsonNode *histo = Convert_msg_off_to_histo ( msg );
+        if(histo)
+         { Agent_send_mqtt_api_message ( Agent, histo, FALSE, "DLS_HISTO" );
+           Json_unref( histo );
+         } else Info( __func__, "mqtt", msg->tech_id, LOG_ERR, "Error when convert '%s:%s' from msg off to histo",
+                      msg->tech_id, msg->acronyme );
+      }
+    return(TRUE);
   }
 /******************************************************************************************************************************/
 /* Met à jour le message en parametre                                                                                         */
@@ -134,10 +200,10 @@
        else if ( msg->etat == TRUE && msg->new_etat == FALSE && Json_get_int ( msg->source_node, "groupe" ) )
         { /* pas de desactivation msg quand dans un groupe, donc no action */ }
        else if ( msg->etat == TRUE && msg->new_etat == FALSE )             /* si le message est désactivé après run du plugin */
-        { Dls_Add_message_to_master_list ( plugin, msg );
+        { Dls_data_MESSAGE_send_to_api ( plugin, msg, FALSE );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE", msg->new_etat_by_line, msg->tech_id, msg->acronyme );
-          Agent_vars->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat == FALSE && msg->new_etat == TRUE )                       /* si message activé après run du plugin */
         { /* On commence par mettre a 0 les messages du meme groupe, s'il y en a /*/
@@ -148,10 +214,10 @@
               { struct DLS_MESSAGE *search_msg = search->data;
                 if (search_msg != msg && Json_get_int ( search_msg->source_node, "groupe" ) == groupe )
                  { search_msg->new_etat = search_msg->etat = FALSE;
-                   Dls_Add_message_to_master_list ( plugin, search_msg );
+                   Dls_data_MESSAGE_send_to_api ( plugin, search_msg, FALSE );
                    Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
-                   Agent_vars->audit_bit_interne_per_sec++;
+                   Agent_vars->audit_bit_interne_par_min++;
                  }
                 search = g_slist_next ( search );
               }
@@ -160,23 +226,26 @@
           gchar *libelle_source = Json_get_string(msg->source_node, "libelle");
           if (msg->libelle_is_dynamic)                                                     /* Conversion du libelle dynamique */
            { gchar *libelle_converted = Convert_libelle_dynamique ( libelle_source );
-             g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_converted );
-             g_free(libelle_converted);
+             if (libelle_converted)
+              { g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_converted );
+                g_free(libelle_converted);
+              }
+             else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "Conversion Error" );
              msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                              /* Freeze time */
            }
-          else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_source ); /* Pas de conversion */
-          Dls_Add_message_to_master_list ( plugin, msg );
+          else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_source ? libelle_source : "" ); /* Pas de conversion */
+          Dls_data_MESSAGE_send_to_api ( plugin, msg, TRUE );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                     "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
-          Agent_vars->audit_bit_interne_per_sec++;
+          Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat && msg->libelle_is_dynamic && freeze >=0 &&              /* Update periodique du libelle dynamique */
                  msg->next_top_check_libelle <= Agent_get_top ( Agent ))
         { gchar *libelle_converted = Convert_libelle_dynamique ( Json_get_string(msg->source_node, "libelle") );
-          gboolean libelle_changed = strcmp ( libelle_converted, msg->libelle_converted );
+          gboolean libelle_changed = (libelle_converted && strcmp ( libelle_converted, msg->libelle_converted ));
           if (libelle_changed)
            { g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_converted );
-             Dls_Add_message_to_master_list ( plugin, msg );
+             Dls_data_MESSAGE_send_to_api ( plugin, msg, TRUE );
            }
           g_free(libelle_converted);
           msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                                 /* freeze time */
