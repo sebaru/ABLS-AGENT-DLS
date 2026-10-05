@@ -146,6 +146,7 @@
   { gchar source_file[128], target_file[128];
 
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_NOTICE, "Compilation of '%s' started", tech_id );
+    gpointer status_handle = Agent_status_push ( Agent, "Compilation of plugin '%s' in progress", tech_id );
     gint top = Agent_get_top ( Agent );
     g_snprintf( source_file, sizeof(source_file), "%s.c", tech_id );
     g_snprintf( target_file, sizeof(target_file),  "libdls-%s.so", tech_id );
@@ -154,6 +155,7 @@
     gint pidgcc = fork();
     if (pidgcc<0)
      { Info( __func__, FACILITY_PLUGIN, tech_id, LOG_WARNING, "Fils: envoi erreur Fork GCC '%s'", tech_id );
+       Agent_status_pop ( Agent, status_handle );
        return(FALSE);
      }
     else if (!pidgcc)
@@ -175,9 +177,11 @@
     if (gcc_return_code != 0)
      { unlink(target_file);
        Info( __func__, FACILITY_PLUGIN, tech_id, LOG_ERR, "Compilation of '%s' failed (gcc return code %d)", tech_id, gcc_return_code );
+       Agent_status_pop ( Agent, status_handle );
        return(FALSE);
      }
     Info( __func__, FACILITY_PLUGIN, tech_id, LOG_INFO, "Compilation of '%s' finished in %06.1fs", tech_id, (Agent_get_top ( Agent ) - top)/10.0 );
+    Agent_status_pop ( Agent, status_handle );
     return(TRUE);
   }
 /******************************************************************************************************************************/
