@@ -235,7 +235,7 @@
 /* Sortie: néant                                                                                                              */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- void Dls_Monitor_flush ( struct DLS_PLUGIN *plugin )
+ void Dls_Monitor_flush ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (!(plugin && plugin->debug && plugin->monitor_changed)) return;
     if (!g_hash_table_size ( plugin->monitor_changed )) return;
 
@@ -288,7 +288,7 @@
 /* Sortie: néant                                                                                                              */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- void Dls_Monitor_clear ( struct DLS_PLUGIN *plugin )
+ void Dls_Monitor_clear ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (plugin && plugin->monitor_changed) g_hash_table_remove_all ( plugin->monitor_changed ); }
 /******************************************************************************************************************************/
 /* Dls_Monitor_stop: Arrete le monitoring d'un plugin et libère la table associée                                             */
@@ -311,7 +311,7 @@
 /* Sortie: néant                                                                                                              */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- void Dls_Monitor_watchdog ( struct DLS_PLUGIN *plugin )
+ void Dls_Monitor_watchdog ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (!(plugin && plugin->debug)) return;
     if (Agent_get_top ( Agent ) < plugin->monitor_until_top) return;
 

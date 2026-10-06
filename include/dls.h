@@ -126,12 +126,13 @@
  extern void Dls_end ( void );
  extern void Dls_loop ( void );
  extern void AUDIO_Send_to_zone ( gchar *audio_zone_name, gchar *audio_libelle );
+ extern void Dls_plugin_update_audio_zone ( struct DLS_PLUGIN *plugin, gpointer user_data );
 
  extern void Dls_set_cde_exterieure ( void );
  extern void Dls_reset_cde_exterieure ( void );
  extern void Dls_set_edge ( void );
  extern void Dls_reset_edge ( void );
- extern void Dls_run_plugin ( struct DLS_PLUGIN *plugin );
+ extern void Dls_run_plugin ( struct DLS_PLUGIN *plugin, gpointer user_data );
 
  extern void Dls_Decharger_un_plugin ( gchar *tech_id );
  extern void Dls_Decharger_plugins ( void );
@@ -139,7 +140,7 @@
  extern void Dls_Importer_un_plugin ( gpointer data, gpointer user_data );
  extern void Dls_Importer_plugins ( void );
  extern void Dls_Activer_plugin ( gchar *tech_id, gboolean actif );
- extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) );
+ extern void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *plugin, gpointer user_data), gpointer user_data );
  extern void Dls_Acquitter_plugin ( gchar *tech_id );
  extern struct DLS_PLUGIN *Dls_get_plugin_by_tech_id ( gchar *tech_id );
  extern void Dls_sync_all_output ( gpointer user_data, struct DLS_PLUGIN *plugin );
@@ -148,9 +149,9 @@
  extern void Dls_Monitor_set ( gchar *tech_id, gboolean actif );
  extern void Dls_Monitor_mark ( struct DLS_PLUGIN *plugin, gint classe, gpointer bit );
  extern void Dls_Monitor_mark_by_tech_id ( gint classe, gchar *tech_id, gpointer bit );
- extern void Dls_Monitor_flush ( struct DLS_PLUGIN *plugin );
- extern void Dls_Monitor_watchdog ( struct DLS_PLUGIN *plugin );
- extern void Dls_Monitor_clear ( struct DLS_PLUGIN *plugin );
+ extern void Dls_Monitor_flush ( struct DLS_PLUGIN *plugin, gpointer user_data );
+ extern void Dls_Monitor_watchdog ( struct DLS_PLUGIN *plugin, gpointer user_data );
+ extern void Dls_Monitor_clear ( struct DLS_PLUGIN *plugin, gpointer user_data );
  extern void Dls_Monitor_stop ( struct DLS_PLUGIN *plugin );
 
  extern void Dls_data_CI_create_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data );

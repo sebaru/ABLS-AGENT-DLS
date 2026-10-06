@@ -64,16 +64,16 @@
   }
 /******************************************************************************************************************************/
 /* Dls_foreach_plugins: Parcours les plugins et applique la fonction passée en paramètre                                      */
-/* Entrée : la fonction à appliquer à chaque plugin                                                                           */
+/* Entrée : la fonction à appliquer à chaque plugin, et le user_data à lui transmettre                                        */
 /* Sortie : rien                                                                                                              */
-/* Synchronisation: conserve Dls_plugins_lock en lecture pendant chaque appel du callback                                    */
+/* Synchronisation: conserve Dls_plugins_lock en lecture pendant chaque appel du callback                                     */
 /******************************************************************************************************************************/
- void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *) )
+ void Dls_foreach_plugins ( void (*do_plugin) (struct DLS_PLUGIN *plugin, gpointer user_data), gpointer user_data )
   { g_rw_lock_reader_lock ( &Agent_vars->Dls_plugins_lock );
     GSList *liste = Agent_vars->Dls_plugins;
     while (liste)
      { struct DLS_PLUGIN *plugin = liste->data;
-       do_plugin( plugin );
+       do_plugin( plugin, user_data );
        liste = liste->next;
      }
     g_rw_lock_reader_unlock ( &Agent_vars->Dls_plugins_lock );
@@ -254,7 +254,7 @@
 /* Sortie : les alias sont mappés                                                                                             */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- static void Dls_plugin_remap_alias ( struct DLS_PLUGIN *plugin )
+ static void Dls_plugin_remap_alias ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (plugin->handle && plugin->remap_all_alias)
      { plugin->remap_all_alias(plugin);
        Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_DEBUG, "Remapping Alias for '%s' OK", plugin->tech_id );
@@ -299,7 +299,7 @@
 /* Sortie : les alias sont mappés                                                                                             */
 /******************************************************************************************************************************/
  static void Dls_plugins_remap_all_alias ( void )
-  { Dls_foreach_plugins ( Dls_plugin_remap_alias ); }
+  { Dls_foreach_plugins ( Dls_plugin_remap_alias, NULL ); }
 /******************************************************************************************************************************/
 /* Dls_Importer_un_plugin: Ajoute ou Recharge un plugin dans la liste des plugins                                             */
 /* Entrée: le tech_id associé                                                                                                 */
@@ -436,7 +436,7 @@
     Dls_plugins_remap_all_alias();                                             /* Remap de tous les alias de tous les plugins */
 
     Dls_Monitor_stop ( plugin );
-    Dls_foreach_plugins ( Dls_Monitor_clear );      /* Les bits du plugin vont disparaître: aucune table ne doit les référencer */
+    Dls_foreach_plugins ( Dls_Monitor_clear, NULL );/* Les bits du plugin vont disparaître: aucune table ne doit les référencer */
 
     Dls_Save_Data_to_API ( plugin );                                              /* Sauvegarde les valeurs des bits internes */
     if (plugin->handle && dlclose( plugin->handle ))
