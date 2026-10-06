@@ -23,6 +23,16 @@ Runtime agent for the Abls-Habitat (DLS).
 The default audio zone can be configured with `--audio-tech-id`,
 `ABLS_AUDIO_TECH_ID`, or the `audio_tech_id` configuration key. It defaults to `AUDIO`.
 
+## Plugin reload
+
+The agent subscribes to `<domain_uuid>/DLS/RELOAD/+` on the API broker.
+Publish to `<domain_uuid>/DLS/RELOAD/<tech_id>` to reload a plugin. The target
+comes from the topic; no payload is required and a payload `tech_id` is ignored.
+Empty targets and extra topic levels are rejected.
+
+Deploy the API and DLS agent together when migrating from the old
+`<domain_uuid>/DLS/RELOAD` topic, which is no longer supported.
+
 ## Packaging RPM
 
 ```sh
