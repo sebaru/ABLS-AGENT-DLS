@@ -101,7 +101,7 @@
      { Agent_vars->next_top_2hz = top + 5;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_2hz, TRUE );
        Dls_data_BI_set   ( NULL, Agent_vars->sys_flipflop_2hz, !Dls_data_BI_get ( Agent_vars->sys_flipflop_2hz) );
-       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_flush );
+       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_flush, NULL );
      }
     if (top >= Agent_vars->next_top_1sec)                                                              /* Toutes les secondes */
      { Agent_vars->next_top_1sec = top + 10;
@@ -121,7 +121,7 @@
      { Agent_vars->next_top_10sec = top + 100;
        Dls_data_MONO_set ( NULL, Agent_vars->sys_top_10sec, TRUE );
        Dls_data_BI_set ( NULL, Agent_vars->sys_mqtt_connected, Agent_is_mqtt_local_connected ( Agent ) );
-       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_watchdog );
+       if (Agent_vars->nbr_plugins_monitored) Dls_foreach_plugins ( Dls_Monitor_watchdog, NULL );
      }
     if (top >= Agent_vars->next_top_1min)                                                               /* Toutes les minutes */
      { Agent_vars->next_top_1min = top + 600;
@@ -136,7 +136,7 @@
 
     Dls_set_edge();
     Dls_set_cde_exterieure();
-    Dls_foreach_plugins ( Dls_run_plugin );                                       /* Fait tourner tous les plugins, un par un */
+    Dls_foreach_plugins ( Dls_run_plugin, NULL );                                 /* Fait tourner tous les plugins, un par un */
     Dls_reset_edge();
     Dls_reset_cde_exterieure();
     Distribuer_outputs();
@@ -363,7 +363,7 @@
 /* Sortie : rien                                                                                                              */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- void Dls_run_plugin ( struct DLS_PLUGIN *plugin )
+ void Dls_run_plugin ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { struct timeval tv_avant, tv_apres;
     if (!plugin->handle) return;                                                 /* si plugin non chargé, on ne l'éxecute pas */
 
@@ -434,6 +434,7 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD/+", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/AUDIO_ZONE/RENAME", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC", Agent_get_domain_uuid ( Agent ) );
 
     Mnemo_create_AI   ( Agent, "BIT_PAR_MIN",   "Nombre de changements d'etat par minute", "bit/min", AGENT_ARCHIVE_1_MIN );
@@ -526,6 +527,21 @@
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "MONITOR", "+" ) )
            { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Monitor_set ( target, Json_get_bool ( mqtt_api_message, "enable" ) );
+           }
+          else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "AUDIO_ZONE", "RENAME" ) )
+           { if ( !Json_has_member ( mqtt_api_message, "old_audio_zone_name" ) ||
+                  !Json_has_member ( mqtt_api_message, "audio_zone_name" ) ||
+                  !Json_has_member ( mqtt_api_message, "description" ) )
+              { Info( __func__, "audio", Agent_get_tech_id ( Agent ), LOG_ERR,
+                      "AUDIO_ZONE/RENAME: old_audio_zone_name, audio_zone_name or description is missing" ); }
+             else
+              { Info( __func__, "audio", Agent_get_tech_id ( Agent ), LOG_NOTICE,
+                      "AUDIO_ZONE/RENAME: '%s' -> '%s' ('%s')",
+                      Json_get_string ( mqtt_api_message, "old_audio_zone_name" ),
+                      Json_get_string ( mqtt_api_message, "audio_zone_name" ),
+                      Json_get_string ( mqtt_api_message, "description" ) );
+                Dls_foreach_plugins ( Dls_plugin_update_audio_zone, mqtt_api_message );
+              }
            }
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "SYNOPTIQUE", "CLIC" ) )
            { if ( !Json_has_member ( mqtt_api_message, "tech_id" ) )

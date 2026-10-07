@@ -53,7 +53,7 @@
 /* Sortie : rien                                                                                                              */
 /* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
 /******************************************************************************************************************************/
- static void Archive_run ( struct DLS_PLUGIN *plugin )
+ static void Archive_run ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (!plugin) return;
     if (!plugin->enable) return;                                                        /* On archive pas les plugins disable */
     if (!Agent_is_running ( Agent )) return;                               /* On archive pas si l'agent est en arret */
@@ -143,5 +143,5 @@
 /* Sortie : rien                                                                                                              */
 /******************************************************************************************************************************/
  void Archive_all_thread ( void )
-  { Dls_foreach_plugins ( Archive_run ); }                                       /* Archivage au mieux toutes les minutes */
+  { Dls_foreach_plugins ( Archive_run, NULL ); }                                       /* Archivage au mieux toutes les minutes */
 /*----------------------------------------------------------------------------------------------------------------------------*/

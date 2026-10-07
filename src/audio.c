@@ -56,4 +56,29 @@
     Agent_send_mqtt_local_message ( Agent, AudioNode, FALSE, "AUDIO_ZONE/%s", audio_zone_name );
     Json_unref ( AudioNode );
   }
+/******************************************************************************************************************************/
+/* Dls_plugin_update_audio_zone: Renomme la zone audio des messages d'un plugin                                               */
+/* Entrée: le plugin, et le payload DLS/AUDIO_ZONE/RENAME (old_audio_zone_name, audio_zone_name)                              */
+/* Synchronisation: appelée via Dls_foreach_plugins, qui protège le plugin avec Dls_plugins_lock en lecture                   */
+/******************************************************************************************************************************/
+ void Dls_plugin_update_audio_zone ( struct DLS_PLUGIN *plugin, gpointer user_data )
+  { JsonNode *request = user_data;
+    gchar *old_audio_zone_name = Json_get_string ( request, "old_audio_zone_name" );
+    gchar *new_audio_zone_name = Json_get_string ( request, "audio_zone_name" );
+    if (!old_audio_zone_name || !new_audio_zone_name) return;
+
+    guint cpt = 0;
+    GSList *liste = plugin->Dls_data_MESSAGE;
+    while (liste)
+     { struct DLS_MESSAGE *msg = liste->data;
+       if ( msg->source_node && Json_has_member ( msg->source_node, "audio_zone_name" ) &&
+            !strcasecmp ( Json_get_string ( msg->source_node, "audio_zone_name" ), old_audio_zone_name ) )
+        { Json_add_string ( msg->source_node, "audio_zone_name", new_audio_zone_name );
+          cpt++;
+        }
+       liste = g_slist_next ( liste );
+     }
+    if (cpt) Info( __func__, "audio", plugin->tech_id, LOG_INFO,
+                   "%d message(s) moved from audio_zone '%s' to '%s'", cpt, old_audio_zone_name, new_audio_zone_name );
+  }
 /*----------------------------------------------------------------------------------------------------------------------------*/
