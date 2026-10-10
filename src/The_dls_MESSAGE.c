@@ -216,7 +216,7 @@
                  { search_msg->new_etat = search_msg->etat = FALSE;
                    Dls_data_MESSAGE_send_to_api ( plugin, search_msg );
                    Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
-                    "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
+                         "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
                    Agent_vars->audit_bit_interne_par_min++;
                  }
                 search = g_slist_next ( search );
@@ -236,7 +236,7 @@
           else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_source ? libelle_source : "" ); /* Pas de conversion */
           Dls_data_MESSAGE_send_to_api ( plugin, msg );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
-                    "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
+                "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
           Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat && msg->libelle_is_dynamic && freeze >=0 &&              /* Update periodique du libelle dynamique */
