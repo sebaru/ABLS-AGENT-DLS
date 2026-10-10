@@ -243,19 +243,33 @@
     GHashTable *monitor_changed;          /* Bits modifiés depuis le dernier flush: clé=pointeur du bit, valeur=classe du bit */
     gint     num_ligne;                                                         /* N° de ligne du plugin en cours d'execution */
     struct DLS_MONO *dls_comm;
+    gboolean dls_comm_old;
     struct DLS_MONO *dls_memsa_ok;
+    gboolean dls_memsa_ok_old;
     struct DLS_MONO *dls_memsa_defaut;
+    gboolean dls_memsa_defaut_old;
     struct DLS_MONO *dls_memsa_defaut_fixe;
+    gboolean dls_memsa_defaut_fixe_old;
     struct DLS_MONO *dls_memsa_alarme;
+    gboolean dls_memsa_alarme_old;
     struct DLS_MONO *dls_memsa_alarme_fixe;
+    gboolean dls_memsa_alarme_fixe_old;
     struct DLS_MONO *dls_memssb_veille;
+    gboolean dls_memssb_veille_old;
     struct DLS_MONO *dls_memssb_alerte;
+    gboolean dls_memssb_alerte_old;
     struct DLS_MONO *dls_memssb_alerte_fixe;
+    gboolean dls_memssb_alerte_fixe_old;
     struct DLS_MONO *dls_memssp_ok;
+    gboolean dls_memssp_ok_old;
     struct DLS_MONO *dls_memssp_derangement;
+    gboolean dls_memssp_derangement_old;
     struct DLS_MONO *dls_memssp_derangement_fixe;
+    gboolean dls_memssp_derangement_fixe_old;
     struct DLS_MONO *dls_memssp_danger;
+    gboolean dls_memssp_danger_old;
     struct DLS_MONO *dls_memssp_danger_fixe;
+    gboolean dls_memssp_danger_fixe_old;
     struct DLS_DI   *dls_osyn_acquit;
     struct DLS_MESSAGE *dls_msg_comm_ok;
     struct DLS_MESSAGE *dls_msg_comm_hs;

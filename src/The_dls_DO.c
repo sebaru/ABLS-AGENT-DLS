@@ -94,7 +94,6 @@
               "ligne %04d: Changing DLS_DO '%s:%s'=%d ",
               (plugin ? plugin->num_ligne : -1), dout->tech_id, dout->acronyme, dout->etat );
     Dls_Monitor_mark ( plugin, DLS_MONITOR_DO, dout );
-    Dls_DO_report_to_API ( dout );                                                                           /* envoi a l'API */
     Archive_Send_to_API( dout->tech_id, dout->acronyme, dout->etat*1.0 );                          /* Archivage si besoin */
     dout->last_arch = Agent_get_top ( Agent );
 
@@ -160,20 +159,6 @@
        Dls_DO_to_json ( element, bit );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_DO_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_DO_report_to_API ( struct DLS_DO *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_bool ( element, "etat", bit->etat );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/DO/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref    ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

@@ -100,7 +100,6 @@
     Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
               "Changing DLS_AI '%s:%s'=%f %s", bit->tech_id, bit->acronyme, bit->valeur, bit->unite );
     Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_AI, bit->tech_id, bit );
-    Dls_AI_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/
 /* Dls_data_AI_set_from_thread_ai: Positionne une AI dans DLS depuis une AI 'thread'                                          */
@@ -166,21 +165,6 @@
        Dls_AI_to_json ( element, bit );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_AI_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_AI_report_to_API ( struct DLS_AI *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element && bit)
-     { Json_add_double ( element, "valeur",   bit->valeur );
-       Json_add_bool   ( element, "in_range", bit->in_range );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/AI/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref      ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

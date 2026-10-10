@@ -85,7 +85,6 @@
         { Agent_vars->Set_Dls_BI_Edge_up   = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_up, bi ); }
        else
         { Agent_vars->Set_Dls_BI_Edge_down = g_slist_prepend ( Agent_vars->Set_Dls_BI_Edge_down, bi ); }
-       if (plugin && plugin->debug) Dls_BI_report_to_API ( bi );                                       /* Si debug, envoi a l'API */
        Dls_Monitor_mark ( plugin, DLS_MONITOR_BI, bi );
        Agent_vars->audit_bit_interne_par_min++;
      }
@@ -113,20 +112,6 @@
  gboolean Dls_data_BI_get_down ( struct DLS_BI *bi )
   { if (!bi) return(FALSE);
     return( bi->edge_down );
-  }
-/******************************************************************************************************************************/
-/* Dls_BI_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le bit                                                                                                            */
-/* Sortie : le JSON                                                                                                           */
-/******************************************************************************************************************************/
- void Dls_BI_report_to_API ( struct DLS_BI *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_bool ( element, "etat", bit->etat );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/BI/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref    ( element );
-     }
   }
 /******************************************************************************************************************************/
 /* Dls_all_BI_to_json: Transforme tous les bits en JSON                                                                       */

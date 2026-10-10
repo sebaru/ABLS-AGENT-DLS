@@ -80,7 +80,6 @@
   { if (!registre) return;
     if (valeur != registre->valeur)
      { registre->valeur = valeur;
-      if (plugin && plugin->debug) Dls_REGISTRE_report_to_API ( registre );
       Dls_Monitor_mark ( plugin, DLS_MONITOR_REGISTRE, registre );
       Info( __func__, "dls", registre->tech_id, LOG_DEBUG,
                  "ligne %04d: Changing DLS_REGISTRE '%s:%s'=%f",
@@ -112,20 +111,6 @@
        Json_add_double ( element, "valeur",    bit->valeur );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_REGISTRE_report_to_API : Formate un bit au format JSON                                                                 */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_REGISTRE_report_to_API ( struct DLS_REGISTRE *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_double ( element, "valeur", bit->valeur );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/REGISTRE/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref      ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

@@ -187,7 +187,7 @@
        Dls_data_DI_set ( di, FALSE );                                                          /* Mise a zero du bit d'entrée */
      }
   }
-/****************************************************D_VARS**************************************************************************/
+/******************************************************************************************************************************/
 /* Set_cde_exterieure: Mise à un des bits de commande exterieure                                                              */
 /* Entrée: rien                                                                                                               */
 /* Sortie: rien                                                                                                               */
@@ -211,19 +211,19 @@
        Agent_vars->Reset_Dls_BI_Edge_up = g_slist_prepend ( Agent_vars->Reset_Dls_BI_Edge_up, bi );
        bi->edge_up = TRUE;
      }
-    while( Agent_vars->Set_Dls_BI_Edge_down )                                         /* A-t-on un boolean down a allumer ?? */
+    while( Agent_vars->Set_Dls_BI_Edge_down )                                          /* A-t-on un boolean down a allumer ?? */
      { struct DLS_BI *bi = Agent_vars->Set_Dls_BI_Edge_down->data;
        Agent_vars->Set_Dls_BI_Edge_down   = g_slist_remove  ( Agent_vars->Set_Dls_BI_Edge_down, bi );
        Agent_vars->Reset_Dls_BI_Edge_down = g_slist_prepend ( Agent_vars->Reset_Dls_BI_Edge_down, bi );
        bi->edge_down = TRUE;
      }
-    while( Agent_vars->Set_Dls_DI_Edge_up )                                             /* A-t-on un boolean up a allumer ?? */
+    while( Agent_vars->Set_Dls_DI_Edge_up )                                              /* A-t-on un boolean up a allumer ?? */
      { struct DLS_DI *di = Agent_vars->Set_Dls_DI_Edge_up->data;
        Agent_vars->Set_Dls_DI_Edge_up   = g_slist_remove  ( Agent_vars->Set_Dls_DI_Edge_up, di );
        Agent_vars->Reset_Dls_DI_Edge_up = g_slist_prepend ( Agent_vars->Reset_Dls_DI_Edge_up, di );
        di->edge_up = TRUE;
      }
-    while( Agent_vars->Set_Dls_DI_Edge_down )                                         /* A-t-on un boolean down a allumer ?? */
+    while( Agent_vars->Set_Dls_DI_Edge_down )                                          /* A-t-on un boolean down a allumer ?? */
      { struct DLS_DI *di = Agent_vars->Set_Dls_DI_Edge_down->data;
        Agent_vars->Set_Dls_DI_Edge_down   = g_slist_remove  ( Agent_vars->Set_Dls_DI_Edge_down, di );
        Agent_vars->Reset_Dls_DI_Edge_down = g_slist_prepend ( Agent_vars->Reset_Dls_DI_Edge_down, di );
@@ -297,7 +297,7 @@
   { return (Agent_get_top ( Agent )); }
 /******************************************************************************************************************************/
 /* Dls_PID: Gestion du PID                                                                                                    */
-/* Sortie : TRUE sur le regean est UP                                                                                         */
+/* Sortie : Mise à jour des bits du PID                                                                                       */
 /******************************************************************************************************************************/
  void Dls_PID ( struct DLS_PLUGIN *plugin, struct DLS_REGISTRE *input, struct DLS_REGISTRE *consigne,
                 struct DLS_REGISTRE *kp,struct DLS_REGISTRE *ki, struct DLS_REGISTRE *kd,
@@ -310,7 +310,6 @@
     gdouble variation_erreur = erreur - input->pid_prev_erreur;
     gdouble result = kp->valeur * erreur + ki->valeur * input->pid_somme_erreurs + kd->valeur * variation_erreur;
     input->pid_prev_erreur = erreur;
-
          if (result > outputmax->valeur ) result = outputmax->valeur;
     else if (result < outputmin->valeur ) result = outputmin->valeur;
     Info( __func__, "dls", input->tech_id, LOG_DEBUG,
@@ -322,9 +321,9 @@
             );
     Dls_data_REGISTRE_set ( plugin, output, result );
   }
- /******************************************************************************************************************************/
+/******************************************************************************************************************************/
 /* Dls_sync_all_output: Envoi une synchronisation globale de toutes les sorties DO et AO                                      */
-/* Entrée : le Dls_tree correspondant                D_VARS                                                                         */
+/* Entrée : le Dls_tree correspondant                                                                                         */
 /* Sortie : rien                                                                                                              */
 /******************************************************************************************************************************/
  void Dls_sync_all_output ( gpointer user_data, struct DLS_PLUGIN *plugin )
@@ -342,7 +341,6 @@
        else Info( __func__, "dls", NULL, LOG_ERR, "JSon RootNode creation failed" );
        liste = g_slist_next ( liste );
      }
-
     liste = plugin->Dls_data_AO;
     while ( liste )                                                                                     /* Pour toutes les AO */
      { struct DLS_AO *bit = liste->data;
@@ -356,6 +354,118 @@
        else Info( __func__, "dls", NULL, LOG_ERR, "JSon RootNode creation failed" );
        liste = g_slist_next ( liste );
      }
+  }
+/******************************************************************************************************************************/
+/* Dls_data_STATUS_send_to_api: publie l'etat des bits internes utilise par les badges                                        */
+/* Entrée : le plugin DLS                                                                                                     */
+/* Sortie : publication de l'état des bits internes sur l'API                                                                 */
+/******************************************************************************************************************************/
+ void Dls_data_STATUS_send_to_api ( struct DLS_PLUGIN *plugin )
+  { gboolean etat_new = FALSE, changed = FALSE;
+    if (!plugin) return;
+    JsonNode *RootNode = Json_create();
+    if (!RootNode) return;
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_comm );
+    if ( etat_new != plugin->dls_comm_old )
+     { Json_add_bool ( RootNode, "COMM", etat_new );
+       plugin->dls_comm_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memsa_ok );
+    if ( etat_new != plugin->dls_memsa_ok_old )
+     { Json_add_bool ( RootNode, "MEMSA_OK", etat_new );
+       plugin->dls_memsa_ok_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memsa_defaut );
+    if ( etat_new != plugin->dls_memsa_defaut_old )
+     { Json_add_bool ( RootNode, "MEMSA_DEFAUT", etat_new );
+       plugin->dls_memsa_defaut_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memsa_defaut_fixe );
+    if ( etat_new != plugin->dls_memsa_defaut_fixe_old )
+     { Json_add_bool ( RootNode, "MEMSA_DEFAUT_FIXE", etat_new );
+       plugin->dls_memsa_defaut_fixe_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memsa_alarme );
+    if ( etat_new != plugin->dls_memsa_alarme_old )
+     { Json_add_bool ( RootNode, "MEMSA_ALARME", etat_new );
+       plugin->dls_memsa_alarme_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memsa_alarme_fixe );
+    if ( etat_new != plugin->dls_memsa_alarme_fixe_old )
+     { Json_add_bool ( RootNode, "MEMSA_ALARME_FIXE", etat_new );
+       plugin->dls_memsa_alarme_fixe_old = etat_new;
+       changed = TRUE;
+     }
+
+     etat_new = Dls_data_MONO_get ( plugin->dls_memssb_veille );
+    if ( etat_new != plugin->dls_memssb_veille_old )
+     { Json_add_bool ( RootNode, "MEMSSB_VEILLE", etat_new );
+       plugin->dls_memssb_veille_old = etat_new;
+       changed = TRUE;
+     }
+
+     etat_new = Dls_data_MONO_get ( plugin->dls_memssb_alerte );
+    if ( etat_new != plugin->dls_memssb_alerte_old )
+     { Json_add_bool ( RootNode, "MEMSSB_ALERTE", etat_new );
+       plugin->dls_memssb_alerte_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssb_alerte_fixe );
+    if ( etat_new != plugin->dls_memssb_alerte_fixe_old )
+     { Json_add_bool ( RootNode, "MEMSSB_ALERTE_FIXE", etat_new );
+       plugin->dls_memssb_alerte_fixe_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssp_ok );
+    if ( etat_new != plugin->dls_memssp_ok_old )
+     { Json_add_bool ( RootNode, "MEMSSP_OK", etat_new );
+       plugin->dls_memssp_ok_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssp_derangement );
+    if ( etat_new != plugin->dls_memssp_derangement_old )
+     { Json_add_bool ( RootNode, "MEMSSP_DERANGEMENT", etat_new );
+       plugin->dls_memssp_derangement_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssp_derangement_fixe );
+    if ( etat_new != plugin->dls_memssp_derangement_fixe_old )
+     { Json_add_bool ( RootNode, "MEMSSP_DERANGEMENT_FIXE", etat_new );
+       plugin->dls_memssp_derangement_fixe_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssp_danger );
+    if ( etat_new != plugin->dls_memssp_danger_old )
+     { Json_add_bool ( RootNode, "MEMSSP_DANGER", etat_new );
+       plugin->dls_memssp_danger_old = etat_new;
+       changed = TRUE;
+     }
+
+    etat_new = Dls_data_MONO_get ( plugin->dls_memssp_danger_fixe );
+    if ( etat_new != plugin->dls_memssp_danger_fixe_old )
+     { Json_add_bool ( RootNode, "MEMSSP_DANGER_FIXE", etat_new );
+       plugin->dls_memssp_danger_fixe_old = etat_new;
+       changed = TRUE;
+     }
+
+    if (changed) Agent_send_mqtt_api_message ( Agent, RootNode, TRUE, "DLS_STATUS/%s", plugin->tech_id );
+    Json_unref ( RootNode );
   }
 /******************************************************************************************************************************/
 /* Dls_run_plugin: Fait tourner les DLS synoptique en parametre                                                               */
@@ -377,9 +487,7 @@
      }
 
     if ( Dls_data_MONO_get ( plugin->dls_comm ) != bit_comm_module )                    /* Mise à jour si écart */
-     { Dls_data_MONO_set ( plugin, plugin->dls_comm, bit_comm_module );
-       Dls_MONO_report_to_API ( plugin->dls_comm );
-     }
+     { Dls_data_MONO_set ( plugin, plugin->dls_comm, bit_comm_module ); }
 
 /*-------------------------------------------------- Calcul du MEMSA_OK ------------------------------------------------------*/
     gboolean new_memsa_ok = bit_comm_module && !( Dls_data_MONO_get( plugin->dls_memsa_defaut ) ||
@@ -410,7 +518,8 @@
        plugin->go( plugin );                                                                            /* On appel le plugin */
      }
     Dls_data_MESSAGE_apply ( plugin );                                             /* Application des nouveaux etats messages */
-    Dls_data_VISUEL_apply ( plugin );
+    Dls_data_VISUEL_apply ( plugin );                                               /* Application des nouveaux etats visuels */
+    Dls_data_STATUS_send_to_api ( plugin );                                      /* Envoi de l'etat des bits internes a l'API */
     plugin->restart = FALSE;
     gettimeofday( &tv_apres, NULL );
     plugin->conso+=Chrono( &tv_avant, &tv_apres );                                                         /* Ajoute la conso */
