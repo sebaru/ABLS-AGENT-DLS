@@ -37,16 +37,16 @@
     gchar *acronyme = Json_get_string ( element, "acronyme" );
     struct DLS_VISUEL *bit = g_try_malloc0 ( sizeof(struct DLS_VISUEL) );
     if (!bit)
-    { Info( __func__, "dls", plugin->tech_id, LOG_ERR, "Memory error for '%s:%s'", tech_id, acronyme );
+     { Info( __func__, "dls", plugin->tech_id, LOG_ERR, "Memory error for '%s:%s'", tech_id, acronyme );
        return;
      }
     g_snprintf( bit->tech_id,  sizeof(bit->tech_id),  "%s", tech_id );
     g_snprintf( bit->acronyme, sizeof(bit->acronyme), "%s", acronyme );
-    g_snprintf( bit->libelle,  sizeof(bit->libelle),  "%s", Json_get_string ( element, "libelle" ) );
     g_snprintf( bit->forme,    sizeof(bit->forme),    "%s", Json_get_string ( element, "forme" ) );
     plugin->Dls_data_VISUEL = g_slist_prepend ( plugin->Dls_data_VISUEL, bit );
     Info( __func__, "dls", plugin->tech_id, LOG_INFO,
-          "Create bit DLS_VISUEL '%s:%s' (forme='%s', libelle='%s')", bit->tech_id, bit->acronyme, bit->forme, bit->libelle );
+          "Create bit DLS_VISUEL '%s:%s' (forme='%s', libelle='%s')",
+          bit->tech_id, bit->acronyme, bit->forme, Json_get_string ( element, "libelle" ) );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_lookup: Recherche un VISUEL dans les plugins DLS                                                           */
