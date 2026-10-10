@@ -95,7 +95,6 @@
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is now counting",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur, bit->valeur );
-          if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
           Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
         }
        else                                                                                                       /* Comptage */
@@ -105,7 +104,6 @@
           if (delta >= 10)                                                              /* On compte +1 toutes les secondes ! */
            { bit->valeur += delta;
              bit->old_top = new_top;
-             if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                /* Si debug, envoi a l'API */
              Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
              Agent_vars->audit_bit_interne_par_min++;
            }
@@ -117,7 +115,6 @@
           Info( __func__, "dls", bit->tech_id, LOG_DEBUG,
                     "ligne %04d: DLS_CH '%s:%s'=%d is not counting anymore",
                    (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
-          if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                   /* Si debug, envoi a l'API */
           Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
         }
      }
@@ -136,23 +133,7 @@
                 (plugin ? plugin->num_ligne : -1), bit->tech_id, bit->acronyme, bit->valeur );
        bit->valeur = 0;
        bit->etat   = FALSE;
-       if (plugin && plugin->debug) Dls_CH_report_to_API ( bit );                                      /* Si debug, envoi a l'API */
        Dls_Monitor_mark ( plugin, DLS_MONITOR_CH, bit );
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_CH_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le bit                                                                                                            */
-/* Sortie : le JSON                                                                                                           */
-/******************************************************************************************************************************/
- void Dls_CH_report_to_API ( struct DLS_CH *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_int  ( element, "valeur", bit->valeur );
-       Json_add_bool ( element, "etat",   bit->etat );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/CH/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref    ( element );
      }
   }
 /******************************************************************************************************************************/

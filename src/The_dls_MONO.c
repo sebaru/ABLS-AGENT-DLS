@@ -88,13 +88,6 @@
     Info( __func__, "dls", mono->tech_id, LOG_DEBUG,
               "ligne %04d: Changing DLS_MONO '%s:%s'=%d",
               (plugin ? plugin->num_ligne : -1), mono->tech_id, mono->acronyme, mono->etat );
-    if ( (plugin && plugin->debug) ||
-         g_str_has_prefix ( mono->acronyme, "MEMSA_DEFAUT" ) ||
-         g_str_has_prefix ( mono->acronyme, "MEMSSB_VEILLE" ) ||
-         g_str_has_prefix ( mono->acronyme, "MEMSSB_ALERTE" ) ||
-         g_str_has_prefix ( mono->acronyme, "MEMSSP_DERANGEMENT" ) ||
-         g_str_has_prefix ( mono->acronyme, "MEMSSP_DANGER" ) )
-     { Dls_MONO_report_to_API ( mono ); }
     Dls_Monitor_mark ( plugin, DLS_MONITOR_MONO, mono );
     Agent_vars->audit_bit_interne_par_min++;
   }
@@ -140,20 +133,6 @@
        Json_add_bool   ( element, "etat",     bit->etat );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_MONO_report_to_API : Formate un bit au format JSON                                                                     */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_MONO_report_to_API ( struct DLS_MONO *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_bool   ( element, "etat",     bit->etat );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/MONO/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref      ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

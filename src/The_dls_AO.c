@@ -101,7 +101,6 @@
     else Info( __func__, "dls", bit->tech_id, LOG_ERR, "JSon RootNode creation failed" );
     Agent_vars->audit_bit_interne_par_min++;
     Dls_Monitor_mark ( plugin, DLS_MONITOR_AO, bit );
-    Dls_AO_report_to_API ( bit );                                                                            /* envoi a l'API */
   }
 /******************************************************************************************************************************/
 /* Dls_AO_to_json: Convertir un AO en JSON                                                                                    */
@@ -130,20 +129,6 @@
        Dls_AO_to_json ( element, bit );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_AO_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_AO_report_to_API ( struct DLS_AO *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_double ( element, "valeur", bit->valeur );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/AO/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

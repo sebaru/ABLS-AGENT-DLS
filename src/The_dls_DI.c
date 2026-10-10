@@ -113,7 +113,6 @@
         Archive_Send_to_API( bit->tech_id, bit->acronyme, bit->etat*1.0 );                         /* Archivage si besoin */
         bit->last_arch = Agent_get_top ( Agent );
         Dls_Monitor_mark_by_tech_id ( DLS_MONITOR_DI, bit->tech_id, bit );
-        Dls_DI_report_to_API ( bit );                                                                        /* envoi a l'API */
      }
   }
 /******************************************************************************************************************************/
@@ -184,20 +183,6 @@
        Dls_DI_to_json ( element, bit );
        Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
-     }
-  }
-/******************************************************************************************************************************/
-/* Dls_DI_report_to_API : Formate un bit au format JSON                                                                       */
-/* Entrées: le JsonNode et le bit                                                                                             */
-/* Sortie : néant                                                                                                             */
-/******************************************************************************************************************************/
- void Dls_DI_report_to_API ( struct DLS_DI *bit )
-  { if (bit == NULL) return;
-    JsonNode *element = Json_create ();
-    if (element)
-     { Json_add_bool ( element, "etat", bit->etat );
-       Agent_send_mqtt_api_message ( Agent, element, TRUE, "DLS_REPORT/DI/%s/%s", bit->tech_id, bit->acronyme );
-       Json_unref    ( element );
      }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/
