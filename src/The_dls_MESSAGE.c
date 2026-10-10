@@ -101,15 +101,15 @@
     msg->new_etat_by_line = (plugin ? plugin->num_ligne : -1);                                 /* Sauvegarde du numéro de ligne */
   }
 /******************************************************************************************************************************/
-/* Dls_data_MESSAGE_send_to_api: Envoie l'historique et les notifications associees au message                                */
-/* Entrée: plugin DLS, message et etat a publier                                                                              */
-/* Sortie: TRUE si le traitement est accepte                                                                                */
+/* Dls_data_MESSAGE_send_to_api: Envoie le nouvel etat du message à l'API                                                     */
+/* Entrée: plugin DLS, le message. Le nouvel etat est pris dans msg->new_etat                                                 */
+/* Sortie: TRUE si le traitement est accepte                                                                                  */
 /******************************************************************************************************************************/
- static gboolean Dls_data_MESSAGE_send_to_api ( struct DLS_PLUGIN *plugin, struct DLS_MESSAGE *msg, gboolean etat )
+ static gboolean Dls_data_MESSAGE_send_to_api ( struct DLS_PLUGIN *plugin, struct DLS_MESSAGE *msg )
   { if (!(plugin && msg)) return(FALSE);
 
     guint top = Agent_get_top ( Agent );
-    if (msg->etat)
+    if (msg->new_etat)
      { gint rate_limit = Json_get_int ( msg->source_node, "rate_limit" );
        if (msg->last_on && top < msg->last_on + rate_limit * 10)
         { Info( __func__, "dls", msg->tech_id, LOG_WARNING,
@@ -119,7 +119,7 @@
        msg->last_on = top;
      }
 
-    if (msg->etat == TRUE)                                                                                 /* Passage a  un ? */
+    if (msg->new_etat == TRUE)                                                                                 /* Passage a  un ? */
      { gchar date_create[128];
        Get_datetime_usec ( date_create, sizeof(date_create) );           /* Mise à jour de de la date de création */
        gchar *dls_shortname = Json_get_string ( msg->source_node, "dls_shortname" );
@@ -174,7 +174,7 @@
           if (strlen(audio_libelle)) AUDIO_Send_to_zone ( audio_zone_name, audio_libelle );
         }
       }
-     else if (msg->etat == 0)
+     else if (msg->new_etat == 0)
       { JsonNode *histo = Convert_msg_off_to_histo ( msg );
         if(histo)
          { Agent_send_mqtt_api_message ( Agent, histo, FALSE, "DLS_HISTO" );
@@ -200,13 +200,13 @@
        else if ( msg->etat == TRUE && msg->new_etat == FALSE && Json_get_int ( msg->source_node, "groupe" ) )
         { /* pas de desactivation msg quand dans un groupe, donc no action */ }
        else if ( msg->etat == TRUE && msg->new_etat == FALSE )             /* si le message est désactivé après run du plugin */
-        { Dls_data_MESSAGE_send_to_api ( plugin, msg, FALSE );
+        { Dls_data_MESSAGE_send_to_api ( plugin, msg );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
-                    "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE", msg->new_etat_by_line, msg->tech_id, msg->acronyme );
+                "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE", msg->new_etat_by_line, msg->tech_id, msg->acronyme );
           Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat == FALSE && msg->new_etat == TRUE )                       /* si message activé après run du plugin */
-        { /* On commence par mettre a 0 les messages du meme groupe, s'il y en a /*/
+        {                                              /* On commence par mettre a 0 les messages du meme groupe, s'il y en a */
           gint groupe = Json_get_int ( msg->source_node, "groupe" );
           if (groupe)
            { GSList *search = plugin->Dls_data_MESSAGE;
@@ -214,9 +214,9 @@
               { struct DLS_MESSAGE *search_msg = search->data;
                 if (search_msg != msg && Json_get_int ( search_msg->source_node, "groupe" ) == groupe )
                  { search_msg->new_etat = search_msg->etat = FALSE;
-                   Dls_data_MESSAGE_send_to_api ( plugin, search_msg, FALSE );
+                   Dls_data_MESSAGE_send_to_api ( plugin, search_msg );
                    Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
-                    "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
+                         "ligne %04d: Changing DLS_MSG '%s:%s'=FALSE (via groupe %d)", msg->new_etat_by_line, msg->tech_id, msg->acronyme, groupe );
                    Agent_vars->audit_bit_interne_par_min++;
                  }
                 search = g_slist_next ( search );
@@ -231,25 +231,26 @@
                 g_free(libelle_converted);
               }
              else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "Conversion Error" );
-             msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                              /* Freeze time */
+             msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                   /* Freeze time */
            }
           else g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_source ? libelle_source : "" ); /* Pas de conversion */
-          Dls_data_MESSAGE_send_to_api ( plugin, msg, TRUE );
+          Dls_data_MESSAGE_send_to_api ( plugin, msg );
           Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
-                    "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
+                "ligne %04d: Changing DLS_MSG '%s:%s'=TRUE", msg->new_etat_by_line, plugin->tech_id, msg->acronyme );
           Agent_vars->audit_bit_interne_par_min++;
         }
        else if ( msg->etat && msg->libelle_is_dynamic && freeze >=0 &&              /* Update periodique du libelle dynamique */
-                 msg->next_top_check_libelle <= Agent_get_top ( Agent ))
+                 msg->next_top_check_libelle <= Agent_get_top ( Agent ))    /* ici new_etat == TRUE forcement, et etat = TRUE */
         { gchar *libelle_converted = Convert_libelle_dynamique ( Json_get_string(msg->source_node, "libelle") );
           gboolean libelle_changed = (libelle_converted && strcmp ( libelle_converted, msg->libelle_converted ));
           if (libelle_changed)
            { g_snprintf ( msg->libelle_converted, sizeof(msg->libelle_converted), "%s", libelle_converted );
-             Dls_data_MESSAGE_send_to_api ( plugin, msg, TRUE );
+             Dls_data_MESSAGE_send_to_api ( plugin, msg );
            }
           g_free(libelle_converted);
-          msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                                 /* freeze time */
+          msg->next_top_check_libelle = Agent_get_top ( Agent ) + freeze;                                      /* freeze time */
         }
+
        if (msg->etat != msg->new_etat) Dls_Monitor_mark ( plugin, DLS_MONITOR_MSG, msg );
        msg->etat = msg->new_etat;                                                                /* Sauvegarde du nouvel état */
        msg->new_etat = FALSE;                                             /* Préparation du futur calcul de l'état du message */

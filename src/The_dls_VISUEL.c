@@ -46,7 +46,7 @@
     g_snprintf( bit->forme,    sizeof(bit->forme),    "%s", Json_get_string ( element, "forme" ) );
     plugin->Dls_data_VISUEL = g_slist_prepend ( plugin->Dls_data_VISUEL, bit );
     Info( __func__, "dls", plugin->tech_id, LOG_INFO,
-              "Create bit DLS_VISUEL '%s:%s' (%s)", bit->tech_id, bit->acronyme, bit->libelle );
+          "Create bit DLS_VISUEL '%s:%s' (forme='%s', libelle='%s')", bit->tech_id, bit->acronyme, bit->forme, bit->libelle );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_lookup: Recherche un VISUEL dans les plugins DLS                                                           */
