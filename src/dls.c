@@ -541,7 +541,9 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/+/+" );
     Agent_subscribe_mqtt_local ( Agent, "SET_DI_PULSE/+/+" );
     Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/REMAP", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD/+", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD_HORLOGE_TICK", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/AUDIO_ZONE/RENAME", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC", Agent_get_domain_uuid ( Agent ) );
