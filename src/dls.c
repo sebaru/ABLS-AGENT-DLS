@@ -541,7 +541,9 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_WATCHDOG/+/+" );
     Agent_subscribe_mqtt_local ( Agent, "SET_DI_PULSE/+/+" );
     Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/REMAP", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD/+", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD_HORLOGE_TICK", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/AUDIO_ZONE/RENAME", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/SYNOPTIQUE/CLIC", Agent_get_domain_uuid ( Agent ) );
@@ -626,7 +628,9 @@
            { Info(__func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "Agent Test from API."); }
 /*------------------------------------------------------------ Remap ---------------------------------------------------------*/
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "REMAP" ) )
-           { MAP_Remap(); }
+           { if (Json_has_member ( mqtt_api_message, "action" )) MAP_Remap_one ( mqtt_api_message );
+             else MAP_Remap();
+           }
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "RELOAD", "+" ) )
            { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Reload_un_plugin ( target );                                            /* Use thread_pool donc non bloquant */
