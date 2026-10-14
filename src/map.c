@@ -127,8 +127,7 @@
 /* Sortie: néant                                                                                                              */
 /******************************************************************************************************************************/
  void MAP_End ( void )
-  { MAP_Clear();
-    g_rw_lock_writer_lock ( &Tree_to_agent_lock );
+  { g_rw_lock_writer_lock ( &Tree_to_agent_lock );
     g_tree_destroy ( Tree_to_agent );
     Tree_to_agent = NULL;
     g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
@@ -138,6 +137,8 @@
     g_rw_lock_writer_unlock ( &Tree_to_local_lock );
     g_rw_lock_clear ( &Tree_to_local_lock );
     g_rw_lock_clear ( &Tree_to_agent_lock );
+    Json_unref ( Tree_root );
+    Tree_root = NULL;
   }
 /******************************************************************************************************************************/
 /* MAP_from_agent: Mappe un identifiant agent vers un identifiant local                                                       */
