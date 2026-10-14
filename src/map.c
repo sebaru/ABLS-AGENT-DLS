@@ -41,7 +41,7 @@
 /*         node2 - deuxieme noeud JSON a comparer                                                                             */
 /* Sortie: -1, 0 ou 1 selon la comparaison                                                                                    */
 /******************************************************************************************************************************/
- static gint MAP_Comparer_clef_agent ( gconstpointer a, gconstpointer b )
+ static gint MAP_Comparer_clef_agent ( gconstpointer a, gconstpointer b, gpointer user_data )
   { JsonNode *node1 = (JsonNode *)a;
     JsonNode *node2 = (JsonNode *)b;
     if (!node1) return(-1);
@@ -66,7 +66,7 @@
 /*         node2 - deuxieme noeud JSON a comparer                                                                             */
 /* Sortie: -1, 0 ou 1 selon la comparaison                                                                                    */
 /******************************************************************************************************************************/
- static gint MAP_Comparer_clef_local ( gconstpointer a, gconstpointer b )
+ static gint MAP_Comparer_clef_local ( gconstpointer a, gconstpointer b, gpointer user_data )
   { JsonNode *node1 = (JsonNode *)a;
     JsonNode *node2 = (JsonNode *)b;
     if (!node1) return(-1);
@@ -85,14 +85,20 @@
     if (!acronyme_2) return(1);
     return ( strcasecmp ( acronyme_1, acronyme_2 ) );
   }
+/*----------------------------------------------------------------------------------------------------------------------------*/
+ static GTree *MAP_New_tree_to_agent ( void )
+  { return ( g_tree_new_full ( MAP_Comparer_clef_local, NULL, (GDestroyNotify)Json_unref, NULL ) ); }
+/*----------------------------------------------------------------------------------------------------------------------------*/
+ static GTree *MAP_New_tree_to_local ( void )
+  { return ( g_tree_new_full ( MAP_Comparer_clef_agent, NULL, (GDestroyNotify)Json_unref, NULL ) ); }
 /******************************************************************************************************************************/
 /* MAP_init: Initialise les elements de gestion des mappings                                                                  */
 /* Entree: néant                                                                                                              */
 /* Sortie: néant                                                                                                              */
 /******************************************************************************************************************************/
  void MAP_Init ( void )
-  { Tree_to_agent = g_tree_new ( MAP_Comparer_clef_local );
-    Tree_to_local = g_tree_new ( MAP_Comparer_clef_agent );
+  { Tree_to_agent = MAP_New_tree_to_agent();
+    Tree_to_local = MAP_New_tree_to_local();
     g_rw_lock_init ( &Tree_to_local_lock );
     g_rw_lock_init ( &Tree_to_agent_lock );
   }
@@ -104,12 +110,12 @@
  static void MAP_Clear( void )
   { g_rw_lock_writer_lock ( &Tree_to_agent_lock );
     g_tree_destroy ( Tree_to_agent );
-    Tree_to_agent = g_tree_new ( MAP_Comparer_clef_local );
+    Tree_to_agent = MAP_New_tree_to_agent();
     g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
 
     g_rw_lock_writer_lock ( &Tree_to_local_lock );
     g_tree_destroy ( Tree_to_local );
-    Tree_to_local = g_tree_new ( MAP_Comparer_clef_agent );
+    Tree_to_local = MAP_New_tree_to_local();
     g_rw_lock_writer_unlock ( &Tree_to_local_lock );
 
     Json_unref ( Tree_root );
@@ -122,6 +128,14 @@
 /******************************************************************************************************************************/
  void MAP_End ( void )
   { MAP_Clear();
+    g_rw_lock_writer_lock ( &Tree_to_agent_lock );
+    g_tree_destroy ( Tree_to_agent );
+    Tree_to_agent = NULL;
+    g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
+    g_rw_lock_writer_lock ( &Tree_to_local_lock );
+    g_tree_destroy ( Tree_to_local );
+    Tree_to_local = NULL;
+    g_rw_lock_writer_unlock ( &Tree_to_local_lock );
     g_rw_lock_clear ( &Tree_to_local_lock );
     g_rw_lock_clear ( &Tree_to_agent_lock );
   }
@@ -145,9 +159,9 @@
     return( (found ? TRUE : FALSE ) );
   }
 /******************************************************************************************************************************/
-/* MAP_to_agent: Mappe un identifiant local vers un identifiant agent dans les mappings                                        */
-/* Entree: key - noeud JSON contenant tech_id et acronyme ou a mapper                                                               */
-/* Sortie: TRUE si mapping rejussi, FALSE sinon                                                                                       */
+/* MAP_to_agent: Mappe un identifiant local vers un identifiant agent dans les mappings                                       */
+/* Entree: key - noeud JSON contenant tech_id et acronyme ou a mapper                                                         */
+/* Sortie: TRUE si mapping reussi, FALSE sinon                                                                                */
 /******************************************************************************************************************************/
  gboolean MAP_to_agent ( JsonNode *key )
   { if (!key) return(FALSE);
@@ -162,6 +176,71 @@
      }
     g_rw_lock_reader_unlock ( &Tree_to_agent_lock );
     return( (found ? TRUE : FALSE ) );
+  }
+/******************************************************************************************************************************/
+/* MAP_Remap_one: Remap un seul mapping unitaire                                                                              */
+/* Entree: payload - noeud JSON contenant action, agent_tech_id, agent_acronyme, tech_id et acronyme                          */
+/* Sortie: none                                                                                                               */
+/******************************************************************************************************************************/
+void MAP_Remap_one ( JsonNode *payload )
+  { /* Les deux paires d'identifiants sont requises par le format de notification. */
+    if (!payload || !Json_has_member ( payload, "action" ) ||
+        !Json_has_member ( payload, "agent_tech_id" ) || !Json_has_member ( payload, "agent_acronyme" ) ||
+        !Json_has_member ( payload, "tech_id" ) || !Json_has_member ( payload, "acronyme" ))
+     { Info ( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_ERR,
+              "Incomplete unitary mapping notification" );
+       return;
+     }
+
+    gchar *action = Json_get_string ( payload, "action" );
+    if (!action || (strcasecmp ( action, "set" ) && strcasecmp ( action, "delete" )))
+     { Info ( __func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_ERR,
+              "Unknown unitary mapping action" );
+       return;
+     }
+
+    /* Bloquer les lecteurs des deux index pendant toute la mise a jour croisee. */
+    g_rw_lock_writer_lock ( &Tree_to_agent_lock );
+    g_rw_lock_writer_lock ( &Tree_to_local_lock );
+
+    /* Les recherches et suppressions comparent les champs de cle, pas les adresses des noeuds. */
+    if (!strcasecmp ( action, "delete" ))
+     { JsonNode *found = g_tree_lookup ( Tree_to_agent, payload );
+       if (found)
+        { /* found fournit l'ancienne cle agent ; payload fournit la cle locale recherchee.
+             L'index local -> agent conserve found en vie jusqu'a la seconde suppression. */
+          g_tree_remove ( Tree_to_local, found );
+          g_tree_remove ( Tree_to_agent, payload );
+        }
+     }
+    else
+     { /* Retirer l'ancien mapping de cet agent pour conserver une correspondance un-a-un. */
+       JsonNode *found = g_tree_lookup ( Tree_to_local, payload );
+       if (found)
+        { /* found contient l'ancienne cle locale, qui peut differer de celle de payload. */
+          g_tree_remove ( Tree_to_agent, found );
+          g_tree_remove ( Tree_to_local, payload );
+        }
+
+       /* Retirer aussi le mapping qui occupe deja la cle locale demandee. */
+       found = g_tree_lookup ( Tree_to_agent, payload );
+       if (found)
+        { /* found contient l'ancienne cle agent, qui peut differer de celle de payload. */
+          g_tree_remove ( Tree_to_local, found );
+          g_tree_remove ( Tree_to_agent, payload );
+        }
+
+       /* Chaque arbre possede une reference, liberee par son destructeur de cle Json_unref.
+          La valeur partage le pointeur de cle et n'a pas de destructeur distinct.
+          replace insere ou remplace cle ET valeur, contrairement a insert qui peut garder l'ancienne cle. */
+       Json_ref ( payload );
+       g_tree_replace ( Tree_to_agent, payload, payload );
+       Json_ref ( payload );
+       g_tree_replace ( Tree_to_local, payload, payload );
+     }
+
+    g_rw_lock_writer_unlock ( &Tree_to_local_lock );
+    g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
   }
 /******************************************************************************************************************************/
 /* MAP_Remap: Recharge les mappings depuis l'API globale                                                                      */
@@ -179,10 +258,12 @@ void MAP_Remap( void )
       while(result)
        { JsonNode *element = result->data;
          g_rw_lock_writer_lock ( &Tree_to_agent_lock );
-         g_tree_insert ( Tree_to_agent, element, element );
+         Json_ref ( element );
+         g_tree_replace ( Tree_to_agent, element, element );
          g_rw_lock_writer_unlock ( &Tree_to_agent_lock );
          g_rw_lock_writer_lock ( &Tree_to_local_lock );
-         g_tree_insert ( Tree_to_local, element, element );
+         Json_ref ( element );
+         g_tree_replace ( Tree_to_local, element, element );
          g_rw_lock_writer_unlock ( &Tree_to_local_lock );
          result = g_list_next(result);
        }

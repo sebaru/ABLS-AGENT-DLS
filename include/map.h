@@ -36,6 +36,7 @@
  extern gboolean MAP_to_local ( JsonNode *key );
  extern gboolean MAP_to_agent ( JsonNode *key );
  extern void MAP_Remap ( void );
+ extern void MAP_Remap_one ( JsonNode *payload );
 
  #endif
 /*----------------------------------------------------------------------------------------------------------------------------*/

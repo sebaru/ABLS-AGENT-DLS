@@ -628,7 +628,9 @@
            { Info(__func__, Agent_get_classe ( Agent ), Agent_get_tech_id ( Agent ), LOG_NOTICE, "Agent Test from API."); }
 /*------------------------------------------------------------ Remap ---------------------------------------------------------*/
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "REMAP" ) )
-           { MAP_Remap(); }
+           { if (Json_has_member ( mqtt_api_message, "action" )) MAP_Remap_one ( mqtt_api_message );
+             else MAP_Remap();
+           }
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "RELOAD", "+" ) )
            { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Reload_un_plugin ( target );                                            /* Use thread_pool donc non bloquant */
