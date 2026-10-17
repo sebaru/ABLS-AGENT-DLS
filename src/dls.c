@@ -543,6 +543,7 @@
     Agent_subscribe_mqtt_local ( Agent, "SET_CI_PULSE/+/+" );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/REMAP", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD/+", Agent_get_domain_uuid ( Agent ) );
+    Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RESTART", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/RELOAD_HORLOGE_TICK", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/MONITOR/+", Agent_get_domain_uuid ( Agent ) );
     Agent_subscribe_mqtt_api   ( Agent, "%s/DLS/AUDIO_ZONE/RENAME", Agent_get_domain_uuid ( Agent ) );
@@ -634,6 +635,28 @@
           else if ( Mqtt_topic_is ( mqtt_api_message, 4, "+", "DLS", "RELOAD", "+" ) )
            { gchar *target = Mqtt_get_topic_lvl ( mqtt_api_message, 3 );
              Dls_Reload_un_plugin ( target );                                            /* Use thread_pool donc non bloquant */
+           }
+          else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "RESTART" ) )
+           { Info( __func__, "dls", Agent_get_tech_id ( Agent ), LOG_DEBUG,
+                   "RESTART: request received on '%s'", Json_get_string ( mqtt_api_message, "mqtt_topic" ) );
+             if (Json_has_member ( mqtt_api_message, "mqtt_topic_lvl3" ))
+              { Info( __func__, "dls", Agent_get_tech_id ( Agent ), LOG_ERR, "RESTART: unexpected extra topic level. Dropping." ); }
+             else if (!Json_has_member ( mqtt_api_message, "tech_id" ))
+              { Info( __func__, "dls", Agent_get_tech_id ( Agent ), LOG_ERR, "RESTART: 'tech_id' is missing. Dropping." ); }
+             else
+              { struct DLS_PLUGIN *plugin = Dls_get_plugin_by_tech_id ( Json_get_string ( mqtt_api_message, "tech_id" ) );
+                if (plugin)
+                 { if (plugin->restart)
+                    { Info( __func__, "dls", plugin->tech_id, LOG_NOTICE,
+                            "RESTART: plugin '%s' is already restarting", plugin->tech_id );
+                    }
+                   else
+                    { plugin->restart = TRUE;
+                      Info( __func__, "dls", plugin->tech_id, LOG_NOTICE,
+                            "RESTART: plugin '%s' restarting", plugin->tech_id );
+                    }
+                 }
+              }
            }
           else if ( Mqtt_topic_is ( mqtt_api_message, 3, "+", "DLS", "RELOAD_HORLOGE_TICK" ) )
            { Dls_Load_horloge_ticks(); }
