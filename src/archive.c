@@ -55,7 +55,6 @@
 /******************************************************************************************************************************/
  static void Archive_run ( struct DLS_PLUGIN *plugin, gpointer user_data )
   { if (!plugin) return;
-    if (!plugin->enable) return;                                                        /* On archive pas les plugins disable */
     if (!Agent_is_running ( Agent )) return;                               /* On archive pas si l'agent est en arret */
 
     guint top = Agent_get_top ( Agent );                         /* Mis en cache : la fonction parcourt tous les bits du plugin */
