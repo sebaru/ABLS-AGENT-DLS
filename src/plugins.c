@@ -292,6 +292,18 @@
     plugin->dls_memssp_danger_fixe      = Dls_data_MONO_lookup ( plugin->tech_id, "MEMSSP_DANGER_FIXE" );
     plugin->dls_msg_comm_ok             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_OK" );
     plugin->dls_msg_comm_hs             = Dls_data_MESSAGE_lookup ( plugin->tech_id, "MSG_COMM_HS" );
+
+    if (plugin->Agent_IO_COMMs) g_slist_free ( plugin->Agent_IO_COMMs );         /* Recalcul des dépendances de communication */
+    plugin->Agent_IO_COMMs = NULL;
+    GSList *Agent_tech_id_list = plugin->Agent_tech_ids;
+    while (Agent_tech_id_list)
+     { gchar *agent_tech_id = Agent_tech_id_list->data;
+       struct DLS_WATCHDOG *watchdog = Dls_data_WATCHDOG_lookup ( agent_tech_id, "IO_COMM" );
+       if (watchdog) plugin->Agent_IO_COMMs = g_slist_prepend ( plugin->Agent_IO_COMMs, watchdog );
+       else
+        { Info( __func__, FACILITY_PLUGIN, plugin->tech_id, LOG_WARNING, "Missing IO_COMM dependency '%s'", agent_tech_id ); }
+       Agent_tech_id_list = g_slist_next ( Agent_tech_id_list );
+     }
   }
 /******************************************************************************************************************************/
 /* Dls_plugins_remap_all_alias: remap les alias de tous les plugins                                                           */
@@ -370,7 +382,9 @@
     GList *agent_tech_ids = Agent_tech_ids;
     while(agent_tech_ids)
      { JsonNode *element = agent_tech_ids->data;
-       plugin->Agent_tech_ids = g_slist_append ( plugin->Agent_tech_ids, Json_get_string ( element, "agent_tech_id" ) );
+       gchar *agent_tech_id = Json_get_string ( element, "agent_tech_id" );
+       if (agent_tech_id)
+        { plugin->Agent_tech_ids = g_slist_append ( plugin->Agent_tech_ids, g_strdup ( agent_tech_id ) ); }
        agent_tech_ids = g_list_next(agent_tech_ids);
      }
     g_list_free(Agent_tech_ids);
@@ -457,7 +471,8 @@
     if (plugin->Dls_data_HORLOGE)  g_slist_free_full ( plugin->Dls_data_HORLOGE, (GDestroyNotify) g_free );
     if (plugin->Dls_data_WATCHDOG) g_slist_free_full ( plugin->Dls_data_WATCHDOG, (GDestroyNotify) g_free );
     if (plugin->Dls_data_VISUEL)   g_slist_free_full ( plugin->Dls_data_VISUEL, (GDestroyNotify) g_free );
-    if (plugin->Arbre_Comm) g_slist_free(plugin->Arbre_Comm);
+    if (plugin->Agent_IO_COMMs)    g_slist_free(plugin->Agent_IO_COMMs);
+    if (plugin->Agent_tech_ids)    g_slist_free_full ( plugin->Agent_tech_ids, (GDestroyNotify) g_free );
     Dls_data_MESSAGE_free_all ( plugin );
 
                                                                              /* Destruction de l'entete associé dans la GList */
