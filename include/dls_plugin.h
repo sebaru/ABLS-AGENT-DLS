@@ -227,6 +227,7 @@
     GSList *Dls_data_MESSAGE;
     GSList *Dls_data_HORLOGE;
     GSList *Agent_tech_ids;                                            /* Liste des Agents en input ou output du plugin D.L.S */
+    GSList *Agent_IO_COMMs;                                                /* Liste des Watchdogs associés aux Agent_tech_ids */
 
     time_t start_date;
     void *handle;
@@ -235,7 +236,6 @@
     gchar *(*version)(void);
     void (*remap_all_alias)(struct DLS_PLUGIN *);
     void (*init)(struct DLS_PLUGIN *);
-    GSList *Arbre_Comm;
 
     gboolean restart;                                   /* 1 si les bits internes "start" du plugins doivent etre positionnés */
     gboolean debug;                                                 /* TRUE si le plugin doit logguer ses changements de bits */

@@ -479,7 +479,7 @@
 
 /*--------------------------------------------- Calcul des bits internals ----------------------------------------------------*/
     gboolean bit_comm_module = TRUE;
-    GSList *liste = plugin->Arbre_Comm;
+    GSList *liste = plugin->Agent_IO_COMMs;
     while ( liste )                                                   /* Calcul de la COMM du DLS a partir de ses dependances */
      { struct DLS_WATCHDOG *bit = liste->data;
        bit_comm_module &= Dls_data_WATCHDOG_get( bit );
@@ -567,6 +567,7 @@
     Agent_is_ready ( Agent );
 
     Dls_init();
+    Agent_send_comm_to_master ( Agent, TRUE );
     Agent_status_push ( Agent, "D.L.S Running" );
 
     while(Agent_is_running ( Agent ))                                              /* On tourne tant que necessaire */
