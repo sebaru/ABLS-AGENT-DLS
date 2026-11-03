@@ -161,9 +161,9 @@
     if (!src) return;
 
     gboolean in_range = Dls_data_AI_get_inrange( src );
-    gint valeur       = Dls_data_AI_get ( src );
+    gdouble valeur    = Dls_data_AI_get ( src );
     g_snprintf( visu->unite, sizeof(visu->unite), "%s", src->unite );
-    Dls_data_VISUEL_set ( plugin, visu, 1.0*valeur, (in_range ? cligno : TRUE), noshow, disable );
+    Dls_data_VISUEL_set ( plugin, visu, valeur, (in_range ? cligno : TRUE), noshow, disable );
   }
 /******************************************************************************************************************************/
 /* Dls_data_VISUEL_set_for_CI : Met un jour un visuel accroché a un compteur d'impulsion                                      */
