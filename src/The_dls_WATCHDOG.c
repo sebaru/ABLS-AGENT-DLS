@@ -43,9 +43,11 @@
     g_snprintf( bit->tech_id,  sizeof(bit->tech_id),  "%s", tech_id );
     g_snprintf( bit->acronyme, sizeof(bit->acronyme), "%s", acronyme );
     g_snprintf( bit->libelle,  sizeof(bit->libelle),  "%s", Json_get_string ( element, "libelle" ) );
+    gint restant = Json_get_int ( element, "restant" );                      /* Restauration du décompte sauvegardé par l'API */
+    if (restant > 0) bit->top = Agent_get_top ( Agent ) + restant;
     plugin->Dls_data_WATCHDOG = g_slist_prepend ( plugin->Dls_data_WATCHDOG, bit );
     Info( __func__, "dls", plugin->tech_id, LOG_INFO,
-              "Create bit DLS_WATCHDOG '%s:%s' (%s)", bit->tech_id, bit->acronyme, bit->libelle );
+          "Create bit DLS_WATCHDOG '%s:%s' (%s), restant=%d", bit->tech_id, bit->acronyme, bit->libelle, restant );
   }
 /******************************************************************************************************************************/
 /* Dls_data_WATCHDOG_lookup: Recherche un WATCHDOG dans les plugins DLS                                                       */
@@ -120,5 +122,23 @@
    struct DLS_WATCHDOG *bit = Dls_data_WATCHDOG_lookup ( agent_tech_id, agent_acronyme );
     if (bit) Dls_data_WATCHDOG_set ( NULL, bit, consigne );
     return(TRUE);
+  }
+/******************************************************************************************************************************/
+/* Dls_all_WATCHDOG_to_json: Transforme tous les watchdogs en JSON pour sauvegarde de leur décompte                           */
+/* Entrée: target                                                                                                             */
+/* Sortie: néant                                                                                                              */
+/******************************************************************************************************************************/
+ void Dls_all_WATCHDOG_to_json ( gpointer array, struct DLS_PLUGIN *plugin )
+  { JsonArray *RootArray = array;
+    GSList *liste = plugin->Dls_data_WATCHDOG;
+    while ( liste )
+     { struct DLS_WATCHDOG *bit = liste->data;
+       JsonNode *element = Json_create();
+       Json_add_string ( element, "tech_id",  bit->tech_id );
+       Json_add_string ( element, "acronyme", bit->acronyme );
+       Json_add_int    ( element, "restant",  Dls_data_WATCHDOG_get_time ( bit ) );
+       Json_array_add_element ( RootArray, element );
+       liste = g_slist_next(liste);
+     }
   }
 /*----------------------------------------------------------------------------------------------------------------------------*/

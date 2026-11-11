@@ -193,8 +193,10 @@
  extern void Dls_data_MESSAGE_create_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data );
  extern void Dls_data_MESSAGE_free_all ( struct DLS_PLUGIN *plugin );
  extern void Dls_data_MESSAGE_apply ( struct DLS_PLUGIN *plugin );
+ extern void Dls_all_MESSAGE_to_json ( gpointer array, struct DLS_PLUGIN *plugin );
  extern void Dls_data_WATCHDOG_create_by_array ( JsonArray *array, guint index, JsonNode *element, gpointer user_data );
  extern gboolean Dls_data_WATCHDOG_set_from_thread_watchdog ( JsonNode *request );
+ extern void Dls_all_WATCHDOG_to_json ( gpointer array, struct DLS_PLUGIN *plugin );
 
  extern void Distribuer_outputs( void );                                                 /* Distribution des sorties DO et AO */
 
