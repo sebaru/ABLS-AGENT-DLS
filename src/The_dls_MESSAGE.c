@@ -58,11 +58,15 @@
      }
     g_snprintf( bit->tech_id,  sizeof(bit->tech_id),  "%s", tech_id );
     g_snprintf( bit->acronyme, sizeof(bit->acronyme), "%s", acronyme );
-    bit->etat = FALSE;                                    /* A l'init, le message est OFF. Json_get_bool ( element, "etat" ); */
+    bit->etat = Json_get_bool ( element, "etat" );                     /* Restauration de l'état sauvegardé au déchargement */
     bit->source_node = json_node_ref ( element );
     bit->last_on = 0;                                            /* A l'init, il n'y a pas de last on (en dixieme de seconde) */
     gchar *libelle = Json_get_string ( element, "libelle" );
     bit->libelle_is_dynamic = ( libelle && g_utf8_strchr( libelle, -1, '$') ? TRUE : FALSE );
+    if (bit->etat)                                       /* Restauration du libellé converti sauvegardé, sinon libellé source */
+     { gchar *libelle_converted = Json_get_string ( element, "libelle_converted" );
+       g_snprintf ( bit->libelle_converted, sizeof(bit->libelle_converted), "%s", libelle_converted ? libelle_converted : libelle );
+     }
 
     plugin->Dls_data_MESSAGE = g_slist_prepend ( plugin->Dls_data_MESSAGE, bit );
     Info( __func__, "dls", tech_id, LOG_INFO,
@@ -254,6 +258,25 @@
        if (msg->etat != msg->new_etat) Dls_Monitor_mark ( plugin, DLS_MONITOR_MSG, msg );
        msg->etat = msg->new_etat;                                                                /* Sauvegarde du nouvel état */
        msg->new_etat = FALSE;                                             /* Préparation du futur calcul de l'état du message */
+       liste = g_slist_next(liste);
+     }
+  }
+/******************************************************************************************************************************/
+/* Dls_all_MESSAGE_to_json: Transforme tous les messages en JSON pour sauvegarde de leur état                                 */
+/* Entrée: target                                                                                                             */
+/* Sortie: néant                                                                                                              */
+/******************************************************************************************************************************/
+ void Dls_all_MESSAGE_to_json ( gpointer array, struct DLS_PLUGIN *plugin )
+  { JsonArray *RootArray = array;
+    GSList *liste = plugin->Dls_data_MESSAGE;
+    while ( liste )
+     { struct DLS_MESSAGE *bit = liste->data;
+       JsonNode *element = Json_create();
+       Json_add_string ( element, "tech_id",  bit->tech_id );
+       Json_add_string ( element, "acronyme", bit->acronyme );
+       Json_add_bool   ( element, "etat",     bit->etat );
+       Json_add_string ( element, "libelle_converted", bit->libelle_converted );
+       Json_array_add_element ( RootArray, element );
        liste = g_slist_next(liste);
      }
   }

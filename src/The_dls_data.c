@@ -77,6 +77,14 @@
     Dls_all_CH_to_json ( CHArray, plugin );
     Json_add_int ( RootNode, "nbr_mnemos_CH", json_array_get_length ( CHArray ) );
 
+    JsonArray *MESSAGEArray = Json_add_array ( RootNode, "mnemos_MESSAGE" );
+    Dls_all_MESSAGE_to_json ( MESSAGEArray, plugin );
+    Json_add_int ( RootNode, "nbr_mnemos_MESSAGE", json_array_get_length ( MESSAGEArray ) );
+
+    JsonArray *WATCHDOGArray = Json_add_array ( RootNode, "mnemos_WATCHDOG" );
+    Dls_all_WATCHDOG_to_json ( WATCHDOGArray, plugin );
+    Json_add_int ( RootNode, "nbr_mnemos_WATCHDOG", json_array_get_length ( WATCHDOGArray ) );
+
     JsonNode *api_result = Http_Post_to_global_API ( Agent, "/run/mnemos/save", RootNode );
     if (api_result && Json_get_int ( api_result, "http_code" ) == 200)
      { Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
@@ -97,6 +105,10 @@
                  "'%s': Save %d CI to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CI" ) );
        Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
                  "'%s': Save %d CH to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_CH" ) );
+       Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
+                 "'%s': Save %d MESSAGE to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_MESSAGE" ) );
+       Info( __func__, "dls", plugin->tech_id, LOG_DEBUG,
+                 "'%s': Save %d WATCHDOG to API.", plugin->tech_id, Json_get_int ( RootNode, "nbr_mnemos_WATCHDOG" ) );
        Info( __func__, "dls", plugin->tech_id, LOG_NOTICE, "Saved '%s' DLS_DATA in %06.1fs", plugin->tech_id, (Agent_get_top ( Agent )-top)/10.0 );
      }
     else
